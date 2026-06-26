@@ -1,0 +1,12 @@
+{
+  "name": "http-streaming-demo",
+  "version": "1.0.0",
+  "description": "Pure JS example of HTTP streaming with Express",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
