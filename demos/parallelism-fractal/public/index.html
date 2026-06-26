@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parallelism in the Browser — Mandelbrot Demo</title>
+<style>
+  body { font-family: sans-serif; max-width: 1100px; margin: 40px auto; }
+  .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  button { padding: 8px 16px; font-size: 14px; cursor: pointer; }
+  button:disabled { opacity: 0.5; }
+  .liveness { display: flex; align-items: center; gap: 10px; }
+  #spinner { width: 26px; height: 26px; border-radius: 4px; background: #4af; }
+  #counter { font-weight: bold; min-width: 24px; display: inline-block; }
+  input { padding: 6px; font-size: 14px; }
+  canvas { border: 1px solid #ccc; display: block; max-width: 100%; height: auto; }
+  #result { margin: 12px 0; font-weight: bold; min-height: 20px; }
+</style>
+</head>
+<body>
+  <h1>Parallelism in the Browser</h1>
+
+  <div class="controls">
+    <div class="liveness">
+      <div id="spinner" title="should keep spinning if the main thread is free"></div>
+      <span>tick: <span id="counter">0</span></span>
+      <input id="liveness-input" type="text" placeholder="Type here while it renders...">
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="main-thread-btn">Render on Main Thread</button>
+    <button id="one-worker-btn">Render in 1 Worker</button>
+    <button id="parallel-workers-btn">Render in N Workers</button>
+  </div>
+
+  <div id="result"></div>
+  <canvas id="canvas"></canvas>
+
+  <script src="mandelbrot.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

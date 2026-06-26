@@ -1,0 +1,12 @@
+{
+  "name": "parallelism-fractal-demo",
+  "version": "1.0.0",
+  "description": "Mandelbrot demo: main thread vs Web Workers vs parallel Web Workers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
