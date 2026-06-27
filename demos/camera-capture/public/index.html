@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Camera Capture Demo</title>
+<style>
+  body { font-family: sans-serif; max-width: 900px; margin: 40px auto; }
+  .controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  select, button { padding: 8px 12px; font-size: 14px; }
+  button { cursor: pointer; }
+  .views { display: flex; gap: 16px; flex-wrap: wrap; }
+  .views figure { margin: 0; }
+  .views figcaption { font-size: 13px; color: #666; margin-top: 6px; }
+  video, canvas { width: 420px; height: 315px; background: #111; border: 1px solid #ccc; display: block; }
+  #status { min-height: 20px; font-weight: bold; margin-bottom: 12px; }
+  #download-link { display: none; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>Camera Capture</h1>
+  <p>Grants access to a connected camera (built-in or external, e.g. a Logitech webcam), shows a live preview, and lets you capture a still frame to a canvas.</p>
+
+  <div class="controls">
+    <select id="camera-select"></select>
+    <button id="capture-btn">Capture photo</button>
+  </div>
+
+  <div id="status"></div>
+
+  <div class="views">
+    <figure>
+      <video id="preview" autoplay playsinline muted></video>
+      <figcaption>Live preview</figcaption>
+    </figure>
+    <figure>
+      <canvas id="snapshot"></canvas>
+      <figcaption>Captured photo</figcaption>
+      <a id="download-link" download="photo.png">Download photo</a>
+    </figure>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
