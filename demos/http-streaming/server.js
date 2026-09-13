@@ -3,14 +3,6 @@ const express = require('express');
 const app = express();
 const PORT = 3001;
 
-async function somethingSlow() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve('Hey there!');
-    }, 4000);
-  });
-}
-
 app.get('/', async (_req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.write(`<!DOCTYPE html>
@@ -19,9 +11,7 @@ app.get('/', async (_req, res) => {
       <meta charset="UTF-8">
       <title>Streaming HTML (Suspense-style)</title>
       <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
-        .placeholder { color: #888; font-style: italic; }
-        section { border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 4px; }
+        body { background: #333; color: #fff;font-family: sans-serif; max-width: 600px; margin: 40px auto; }
       </style>
     </head>
     <body>
@@ -30,13 +20,17 @@ app.get('/', async (_req, res) => {
     </html>
   `);
 
-  const data = await somethingSlow();
+  const data = await getData();
   
   res.write(`
     <script>document.querySelector('h1').textContent = '${data}'</script>
   `);
   res.end();
 });
+
+function getData() {
+  return new Promise((resolve) => setTimeout(() => resolve("Hey there!"), 4000));
+}
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
