@@ -5,6 +5,7 @@ const PORT = 3001;
 
 app.get('/', async (_req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader("Transfer-Encoding", "chunked");
   res.write(`<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -29,7 +30,7 @@ app.get('/', async (_req, res) => {
 });
 
 function getData() {
-  return new Promise((resolve) => setTimeout(() => resolve("Hey there!"), 4000));
+  return new Promise((resolve) => setTimeout(() => resolve("Hey there!"), 5000));
 }
 
 app.listen(PORT, () => {
