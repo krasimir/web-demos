@@ -14,7 +14,7 @@ set -uo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PID_FILE="$ROOT_DIR/.demo-pids"
 
-# Demo ports currently live in 3001-3003 (see demos/*/server.js). Widened
+# Demo ports currently live in 3001-3004 (see demos/*/server.js). Widened
 # to leave headroom as more demos get added.
 PORT_RANGE_START=3000
 PORT_RANGE_END=3020
