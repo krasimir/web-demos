@@ -141,6 +141,15 @@ function renderStage() {
     color: #fff;
     cursor: pointer;
   }
+  input { 
+    font-size: 1em;
+    border: solid 2px #006fa7;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    padding: 1em;
+    background: none;
+    color: #fff;
+  }
   ${cssCode}
 </style>
 </head>
