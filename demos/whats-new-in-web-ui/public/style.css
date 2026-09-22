@@ -55,11 +55,11 @@ html, body {
   flex-wrap: wrap;
   align-items: center;
   gap: .6rem 1rem;
-  padding: 0.2em 1.5rem;
+  padding: 0.2em 0.5rem;
+  justify-content: space-between;
 }
 
 .tabs {
-  order: 2;
   display: flex;
   gap: .25rem;
 }
@@ -94,7 +94,7 @@ html, body {
 .solution-btn {
   order: 4;
   appearance: none;
-  border: 1px solid #5b8cff;
+  border: none;
   border-radius: .4rem;
   background: transparent;
   color: #5b8cff;

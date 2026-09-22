@@ -105,6 +105,15 @@ function renderStage() {
     color: #e8e8e8;
     font-family: system-ui, -apple-system, sans-serif;
   }
+  button {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: #006fa7;
+    color: #fff;
+    cursor: pointer;
+  }
   ${cssCode}
 </style>
 </head>
