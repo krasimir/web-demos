@@ -1,0 +1,24 @@
+{
+  "name": "whats-new-in-web-ui-demo",
+  "version": "1.0.0",
+  "description": "Split-screen playground (HTML/CSS/JS editor + live result) for demoing new web platform features",
+  "main": "server.js",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --outfile=public/bundle.js --format=iife",
+    "start": "npm run build && node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@codemirror/commands": "^6.7.1",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/language": "^6.10.6",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.34.1",
+    "esbuild": "^0.24.0"
+  }
+}

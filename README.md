@@ -18,6 +18,10 @@ Express app under `demos/`.
   `navigator.modelContext`, so an agent can validate the phone number and
   submit the form without touching the DOM. (on the web:
   https://webmcp-checkout-demo.krasimir-st-tsonev.chatgpt.site/)
+* [What's new in web UI](./demos/whats-new-in-web-ui/) (port 3005) — a
+  split-screen playground with a CodeMirror-based HTML/CSS/JS editor on the
+  right and a live, sandboxed preview on the left, for demoing new web
+  platform features.
 
 ## Running
 

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What's New in Web UI — Playground</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <section class="pane pane-result">
+      <iframe id="stage" title="Result" sandbox="allow-scripts"></iframe>
+    </section>
+    <section class="pane pane-editor">
+      <div class="tabs">
+        <button class="tab active" data-tab="html" type="button">HTML</button>
+        <button class="tab" data-tab="css" type="button">CSS</button>
+        <button class="tab" data-tab="js" type="button">JS</button>
+      </div>
+      <div class="editor-wrap">
+        <div class="editor-inner" data-editor="html"></div>
+        <div class="editor-inner" data-editor="css" hidden></div>
+        <div class="editor-inner" data-editor="js" hidden></div>
+      </div>
+    </section>
+  </div>
+  <script src="bundle.js"></script>
+</body>
+</html>
