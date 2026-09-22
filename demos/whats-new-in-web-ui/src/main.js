@@ -6,35 +6,7 @@ import { css } from '@codemirror/lang-css';
 import { javascript } from '@codemirror/lang-javascript';
 import { syntaxHighlighting, indentUnit } from '@codemirror/language';
 import { oneDarkTheme, oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-
-const DEFAULT_SOURCE = {
-  html: `<div class="card">
-  <h1>What's up my man?</h1>
-  <button>Say, hey!</button>
-</div>`,
-  css: `.card {
-  padding: 2rem 3rem;
-  border-radius: 0.4rem;
-  background: #1e1d1d;
-  text-align: center;
-}
-h1 {
-  font-size: 2rem;
-  margin: 0 0 .5rem;
-  color: gold;
-}
-button {
-  font-size: 1rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  background: royalblue;
-  color: #fff;
-  cursor: pointer;
-}
-`,
-  js: `console.log('Playground ready.');`
-};
+import { demos } from './demos.js';
 
 const bareTheme = EditorView.theme({
   '&': {
@@ -104,9 +76,9 @@ function scheduleRender() {
 }
 
 const views = {
-  html: createEditor(editorHosts.html, html, DEFAULT_SOURCE.html, scheduleRender),
-  css: createEditor(editorHosts.css, css, DEFAULT_SOURCE.css, scheduleRender),
-  js: createEditor(editorHosts.js, javascript, DEFAULT_SOURCE.js, scheduleRender),
+  html: createEditor(editorHosts.html, html, demos[0].html, scheduleRender),
+  css: createEditor(editorHosts.css, css, demos[0].css, scheduleRender),
+  js: createEditor(editorHosts.js, javascript, demos[0].js, scheduleRender),
 };
 
 function renderStage() {
@@ -163,16 +135,25 @@ tabs.forEach((tab) => {
 
 renderStage();
 
-window.playground = {
-  views,
-  setCode(tab, code) {
-    const view = views[tab];
-    view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: code },
-    });
-  },
-  getCode(tab) {
-    return views[tab].state.doc.toString();
-  },
-  showTab: setActiveTab,
-};
+function setContent(tab, code) {
+  const view = views[tab];
+  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: code } });
+}
+
+function applyDemo(demo) {
+  setContent('html', demo.html);
+  setContent('css', demo.css);
+  setContent('js', demo.js);
+  setActiveTab('html');
+}
+
+const demoSelect = document.getElementById('demo-select');
+demos.forEach((demo, index) => {
+  const option = document.createElement('option');
+  option.value = String(index);
+  option.textContent = demo.name;
+  demoSelect.appendChild(option);
+});
+demoSelect.addEventListener('change', () => {
+  applyDemo(demos[demoSelect.value]);
+});

@@ -49,11 +49,45 @@ html, body {
   background: #0b0c0f;
 }
 
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.2em 1.5rem;
+}
+
 .tabs {
+  order: 2;
   display: flex;
   gap: .25rem;
-  justify-content: center;
-  flex-shrink: 0;
+}
+
+.demo-select {
+  order: 3;
+  margin-left: auto;
+  appearance: none;
+  border: 1px solid #2a2d33;
+  border-radius: .4rem;
+  background: #16181c
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%236b7280" d="M4 6l4 4 4-4z"/></svg>')
+    no-repeat right .6rem center / .7rem;
+  color: #c9cdd3;
+  font: inherit;
+  font-size: .6rem;
+  letter-spacing: .04em;
+  padding: .5rem 1.8rem .5rem .8rem;
+  cursor: pointer;
+}
+
+.demo-select:hover {
+  border-color: #484c54;
+  color: #ffffff;
+}
+
+.demo-select:focus {
+  outline: none;
+  border-color: #5b8cff;
 }
 
 .tab {

@@ -9,13 +9,16 @@
 <body>
   <div class="app">
     <section class="pane pane-result">
-      <iframe id="stage" title="Result" sandbox="allow-scripts"></iframe>
+      <iframe id="stage" title="Result" sandbox="allow-scripts allow-modals"></iframe>
     </section>
     <section class="pane pane-editor">
-      <div class="tabs">
-        <button class="tab active" data-tab="html" type="button">HTML</button>
-        <button class="tab" data-tab="css" type="button">CSS</button>
-        <button class="tab" data-tab="js" type="button">JS</button>
+      <div class="toolbar">
+        <div class="tabs">
+          <button class="tab active" data-tab="html" type="button">HTML</button>
+          <button class="tab" data-tab="css" type="button">CSS</button>
+          <button class="tab" data-tab="js" type="button">JS</button>
+        </div>
+        <select id="demo-select" class="demo-select"></select>
       </div>
       <div class="editor-wrap">
         <div class="editor-inner" data-editor="html"></div>
