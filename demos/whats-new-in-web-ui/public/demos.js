@@ -138,4 +138,36 @@ lightButton.addEventListener('click', () => {
   }
 };
 
-export const demos = [centering, contrastColor, theming];
+/* ******************************************** if */
+const ifelse = {
+  name: "IV. If-Else",
+  defaultTab: "html",
+  fontSize: { html: "1.2em", css: "0.8em" },
+  problem: {
+    html: `<div class="card">
+  <div
+    class="progress"
+    data-value="85" />
+</div>`,
+    css: `@function --check(--value <number>) {
+  result: if(
+    style(--value: 100): #6eff6e;
+    else: #ff3333;
+  );
+}
+.progress {
+  width: 300px;
+  height: 70px;
+  background: --check(
+    attr(data-value type(<number>), 0)
+  );
+}
+.card {
+  place-items: center;
+  display: grid;
+}`,
+    js: ``
+  }
+};
+
+export const demos = [centering, contrastColor, theming, ifelse];
