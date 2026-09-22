@@ -91,18 +91,52 @@ const editorHosts = Object.fromEntries(
   Array.from(document.querySelectorAll('[data-editor]')).map((el) => [el.dataset.editor, el])
 );
 
+const TYPING_RENDER_DELAY = 150;
+const PARAM_RENDER_DELAY = 700;
+const CSS_PATCH_DELAY = 100;
+
+let stageReady = false;
+stage.addEventListener('load', () => { stageReady = true; });
+
 let renderTimer;
-function scheduleRender() {
+let cssPatchTimer;
+function scheduleRender(delay = TYPING_RENDER_DELAY) {
+  clearTimeout(cssPatchTimer);
   clearTimeout(renderTimer);
-  renderTimer = setTimeout(renderStage, 150);
+  renderTimer = setTimeout(renderStage, delay);
+}
+
+function scheduleCssPatch() {
+  if (!stageReady) {
+    scheduleRender();
+    return;
+  }
+  clearTimeout(cssPatchTimer);
+  cssPatchTimer = setTimeout(() => {
+    stage.contentWindow.postMessage({ __setCss: views.css.state.doc.toString() }, '*');
+  }, CSS_PATCH_DELAY);
+}
+
+function handleEditorChange(tab) {
+  if (tab === 'css') {
+    scheduleCssPatch();
+  } else {
+    scheduleRender();
+  }
+}
+
+function resolveField(field, params) {
+  return typeof field === 'function' ? field(params) : field;
 }
 
 let currentDemoIndex = demoIndexFromHash();
+let currentVariant = 'problem';
+let currentParams = {};
 
 const views = {
-  html: createEditor(editorHosts.html, html, demos[currentDemoIndex].problem.html, scheduleRender),
-  css: createEditor(editorHosts.css, css, demos[currentDemoIndex].problem.css, scheduleRender),
-  js: createEditor(editorHosts.js, javascript, demos[currentDemoIndex].problem.js, scheduleRender),
+  html: createEditor(editorHosts.html, html, resolveField(demos[currentDemoIndex].problem.html, currentParams), () => handleEditorChange('html')),
+  css: createEditor(editorHosts.css, css, resolveField(demos[currentDemoIndex].problem.css, currentParams), () => handleEditorChange('css')),
+  js: createEditor(editorHosts.js, javascript, resolveField(demos[currentDemoIndex].problem.js, currentParams), () => handleEditorChange('js')),
 };
 
 function renderStage() {
@@ -113,6 +147,7 @@ function renderStage() {
   const stageBg = isLight ? '#ffffff' : '#0b0c0f';
   const stageFg = isLight ? '#14161a' : '#e8e8e8';
 
+  stageReady = false;
   stage.srcdoc = `<!doctype html>
 <html>
 <head>
@@ -141,7 +176,7 @@ function renderStage() {
     color: #fff;
     cursor: pointer;
   }
-  input { 
+  input {
     font-size: 1em;
     border: solid 2px #006fa7;
     border-radius: 0.5rem;
@@ -150,10 +185,20 @@ function renderStage() {
     background: none;
     color: #fff;
   }
-  ${cssCode}
 </style>
+<style id="demo-css">${cssCode}</style>
 </head>
 <body>
+<script>
+  window.updateDemoParams = function (params) {
+    window.parent.postMessage({ __demoParams: params }, '*');
+  };
+  window.addEventListener('message', function (event) {
+    if (event.data && typeof event.data.__setCss === 'string') {
+      document.getElementById('demo-css').textContent = event.data.__setCss;
+    }
+  });
+<\/script>
 ${htmlCode}
 <script>
 try {
@@ -186,10 +231,32 @@ function setContent(tab, code) {
 }
 
 function applyVariant(demo, variant) {
-  setContent('html', demo[variant].html);
-  setContent('css', demo[variant].css);
-  setContent('js', demo[variant].js);
+  currentVariant = variant;
+  currentParams = {};
+  setContent('html', resolveField(demo[variant].html, currentParams));
+  setContent('css', resolveField(demo[variant].css, currentParams));
+  setContent('js', resolveField(demo[variant].js, currentParams));
 }
+
+function updateDemoParams(partial) {
+  currentParams = { ...currentParams, ...partial };
+  const variant = demos[currentDemoIndex][currentVariant];
+  const dynamicTabs = ['html', 'css', 'js'].filter((tab) => typeof variant[tab] === 'function');
+  dynamicTabs.forEach((tab) => setContent(tab, variant[tab](currentParams)));
+  // A css-only change already went through the fast, non-destructive patch path
+  // (see handleEditorChange). html/js changes need a real reload, so give that
+  // a longer throttle to avoid interrupting whatever's mid-interaction in the preview.
+  if (dynamicTabs.some((tab) => tab !== 'css')) {
+    scheduleRender(PARAM_RENDER_DELAY);
+  }
+}
+
+window.addEventListener('message', (event) => {
+  if (event.source !== stage.contentWindow) return;
+  if (event.data && event.data.__demoParams) {
+    updateDemoParams(event.data.__demoParams);
+  }
+});
 
 const demoSelect = document.getElementById('demo-select');
 demos.forEach((demo, index) => {

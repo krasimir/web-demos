@@ -41,7 +41,7 @@ const contrastColor = {
   <button>Say, hey!</button>
   <input type="color" />
 </div>`,
-    css: `.card {
+    css: (params) => `.card {
   width: 70%;
   height: 300px;
   border-radius: 0.4rem;
@@ -53,6 +53,11 @@ const contrastColor = {
   justify-content: center;
   align-items: center;
 }
+button {
+  --bg-color: ${params.bgColor || "#006fa7"};
+  background: var(--bg-color);
+  color: #fff;
+}
 `,
     js: `
       const input = document.querySelector('input[type="color"]');
@@ -61,6 +66,7 @@ const contrastColor = {
       input.addEventListener('input', (e) => {
         document.querySelector('button').style.backgroundColor = e.target.value;
         input.style.backgroundColor = e.target.value;
+        updateDemoParams({ bgColor: e.target.value });
       });
     `
   },
