@@ -125,8 +125,8 @@ function handleEditorChange(tab) {
   }
 }
 
-function resolveField(field, params) {
-  return typeof field === 'function' ? field(params) : field;
+function resolveField(field, code, params) {
+  return typeof field === 'function' ? field(code, params) : field;
 }
 
 let currentDemoIndex = demoIndexFromHash();
@@ -134,9 +134,9 @@ let currentVariant = 'problem';
 let currentParams = {};
 
 const views = {
-  html: createEditor(editorHosts.html, html, resolveField(demos[currentDemoIndex].problem.html, currentParams), () => handleEditorChange('html')),
-  css: createEditor(editorHosts.css, css, resolveField(demos[currentDemoIndex].problem.css, currentParams), () => handleEditorChange('css')),
-  js: createEditor(editorHosts.js, javascript, resolveField(demos[currentDemoIndex].problem.js, currentParams), () => handleEditorChange('js')),
+  html: createEditor(editorHosts.html, html, resolveField(demos[currentDemoIndex].problem.html, undefined, currentParams), () => handleEditorChange('html')),
+  css: createEditor(editorHosts.css, css, resolveField(demos[currentDemoIndex].problem.css, undefined, currentParams), () => handleEditorChange('css')),
+  js: createEditor(editorHosts.js, javascript, resolveField(demos[currentDemoIndex].problem.js, undefined, currentParams), () => handleEditorChange('js')),
 };
 
 function renderStage() {
@@ -234,16 +234,16 @@ function setContent(tab, code) {
 function applyVariant(demo, variant) {
   currentVariant = variant;
   currentParams = {};
-  setContent('html', resolveField(demo[variant].html, currentParams));
-  setContent('css', resolveField(demo[variant].css, currentParams));
-  setContent('js', resolveField(demo[variant].js, currentParams));
+  setContent('html', resolveField(demo[variant].html, undefined, currentParams));
+  setContent('css', resolveField(demo[variant].css, undefined, currentParams));
+  setContent('js', resolveField(demo[variant].js, undefined, currentParams));
 }
 
 function updateDemoParams(partial) {
   currentParams = { ...currentParams, ...partial };
   const variant = demos[currentDemoIndex][currentVariant];
   const dynamicTabs = ['html', 'css', 'js'].filter((tab) => typeof variant[tab] === 'function');
-  dynamicTabs.forEach((tab) => setContent(tab, variant[tab](currentParams)));
+  dynamicTabs.forEach((tab) => setContent(tab, variant[tab](views[tab].state.doc.toString(), currentParams)));
   // A css-only change already went through the fast, non-destructive patch path
   // (see handleEditorChange). html/js changes need a real reload, so give that
   // a longer throttle to avoid interrupting whatever's mid-interaction in the preview.
