@@ -1,7 +1,7 @@
 /* ******************************************** center */
 const centering = {
   name: "I. Centering",
-  fontSize: { html: "1em", css: "1.2em" },
+  fontSize: { html: "1.2em", css: "1.2em" },
   problem: {
     html: `<div class="card">
   <button>Say, hey!</button>
@@ -90,8 +90,8 @@ button {
 /* ******************************************** theming */
 const theming = {
   name: "III. Theming",
-  defaultTab: "css",
-  fontSize: { html: "0.8em", css: "0.8em" },
+  defaultTab: "html",
+  fontSize: { html: "1em", css: "0.8em" },
   problem: {
     html: (code, params) => {
       const containerClass = params?.scheme === "dark" ? "dark" : "light";
@@ -140,7 +140,7 @@ lightButton.addEventListener('click', () => {
 
 /* ******************************************** if */
 const ifelse = {
-  name: "IV. If-Else",
+  name: "III. If-Else",
   defaultTab: "html",
   fontSize: { html: "1.2em", css: "0.8em" },
   problem: {
@@ -170,4 +170,62 @@ const ifelse = {
   }
 };
 
-export const demos = [centering, contrastColor, theming, ifelse];
+/* ******************************************** dialog */
+const dialog = {
+  name: "IV. Dialog",
+  defaultTab: "html",
+  fontSize: { html: "0.8em", css: "0.85em" },
+  problem: {
+    html: `<button commandfor="dialog" command="show-modal">
+  Open dialog
+</button>
+
+<dialog id="dialog" closedby="any">
+  <h1>Native &lt;dialog&gt;</h1>
+  <p>No JavaScript library required.</p>
+  <form method="dialog">
+    <button>Close</button>
+  </form>
+</dialog>`,
+    css: `dialog {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  background: #1c1c1c;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    overlay 0.2s ease allow-discrete,
+    display 0.2s ease allow-discrete;
+}
+dialog[open] {
+  opacity: 1;
+  transform: scale(1);
+}
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.2s ease allow-discrete;
+}
+dialog[open]::backdrop {
+  opacity: 1;
+}
+`,
+    js: ``
+  }
+};
+
+export const demos = [centering, contrastColor, ifelse, dialog];
