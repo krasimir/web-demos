@@ -84,7 +84,6 @@ html, body {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
   overflow: auto;
   padding: 1.5rem 2.5rem 2.5rem;
 }
@@ -92,6 +91,7 @@ html, body {
 .editor-inner {
   width: 100%;
   max-width: 720px;
+  margin: auto;
 }
 
 .editor-inner .cm-editor {

@@ -14,13 +14,14 @@ const DEFAULT_SOURCE = {
 </div>`,
   css: `.card {
   padding: 2rem 3rem;
-  border-radius: 1rem;
-  background: #393939;
+  border-radius: 0.4rem;
+  background: #1e1d1d;
   text-align: center;
 }
 h1 {
   font-size: 2rem;
   margin: 0 0 .5rem;
+  color: gold;
 }
 button {
   font-size: 1rem;
