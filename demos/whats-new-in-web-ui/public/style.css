@@ -189,5 +189,5 @@ html, body {
 .editor-inner .cm-editor {
   outline: none;
   background: none !important;
-  font-size: 1.2em;
+  /* font-size: 1.2em; */
 }

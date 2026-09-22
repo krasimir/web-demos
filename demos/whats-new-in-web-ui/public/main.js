@@ -12,9 +12,14 @@ const themeCompartment = new Compartment();
 const darkEditorTheme = [oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)];
 const lightEditorTheme = [syntaxHighlighting(defaultHighlightStyle)];
 
+const DEFAULT_FONT_SIZE = '16px';
+const fontSizeCompartments = { html: new Compartment(), css: new Compartment(), js: new Compartment() };
+function fontSizeTheme(size) {
+  return EditorView.theme({ '&': { fontSize: size } });
+}
+
 const bareTheme = EditorView.theme({
   '&': {
-    fontSize: '16px',
     backgroundColor: 'transparent',
   },
   '.cm-content': {
@@ -53,11 +58,12 @@ function demoIndexFromHash() {
   return index === -1 ? 0 : index;
 }
 
-function makeExtensions(langExtension, onChange) {
+function makeExtensions(langExtension, onChange, tab) {
   return [
     history(),
     drawSelection(),
     themeCompartment.of(darkEditorTheme),
+    fontSizeCompartments[tab].of(fontSizeTheme(DEFAULT_FONT_SIZE)),
     bareTheme,
     EditorView.lineWrapping,
     indentUnit.of('  '),
@@ -75,11 +81,11 @@ function makeExtensions(langExtension, onChange) {
   ];
 }
 
-function createEditor(parent, langExtension, initialDoc, onChange) {
+function createEditor(parent, langExtension, initialDoc, onChange, tab) {
   return new EditorView({
     state: EditorState.create({
       doc: initialDoc,
-      extensions: makeExtensions(langExtension, onChange),
+      extensions: makeExtensions(langExtension, onChange, tab),
     }),
     parent,
   });
@@ -131,13 +137,22 @@ function resolveField(field, code, params) {
 
 let currentDemoIndex = demoIndexFromHash();
 let currentVariant = 'problem';
-let currentParams = {};
+let currentParams = { ...demos[currentDemoIndex].defaultParams };
 
 const views = {
-  html: createEditor(editorHosts.html, html, resolveField(demos[currentDemoIndex].problem.html, undefined, currentParams), () => handleEditorChange('html')),
-  css: createEditor(editorHosts.css, css, resolveField(demos[currentDemoIndex].problem.css, undefined, currentParams), () => handleEditorChange('css')),
-  js: createEditor(editorHosts.js, javascript, resolveField(demos[currentDemoIndex].problem.js, undefined, currentParams), () => handleEditorChange('js')),
+  html: createEditor(editorHosts.html, html, resolveField(demos[currentDemoIndex].problem.html, undefined, currentParams), () => handleEditorChange('html'), 'html'),
+  css: createEditor(editorHosts.css, css, resolveField(demos[currentDemoIndex].problem.css, undefined, currentParams), () => handleEditorChange('css'), 'css'),
+  js: createEditor(editorHosts.js, javascript, resolveField(demos[currentDemoIndex].problem.js, undefined, currentParams), () => handleEditorChange('js'), 'js'),
 };
+
+function applyFontSizes(demo) {
+  ['html', 'css', 'js'].forEach((tab) => {
+    const size = (demo.fontSize && demo.fontSize[tab]) || DEFAULT_FONT_SIZE;
+    views[tab].dispatch({
+      effects: fontSizeCompartments[tab].reconfigure(fontSizeTheme(size)),
+    });
+  });
+}
 
 function renderStage() {
   const htmlCode = views.html.state.doc.toString();
@@ -185,6 +200,17 @@ function renderStage() {
     background: none;
     color: #fff;
   }
+  h1 {
+    margin: 0;
+    padding: 0;
+  }
+  .card {
+    width: 70%;
+    height: 300px;
+    border-radius: 0.4rem;
+    background: #1c1c1c;
+    border: solid 1px #5b5b5b;
+  }
 </style>
 <style id="demo-css">${cssCode}</style>
 </head>
@@ -225,6 +251,7 @@ tabs.forEach((tab) => {
 
 renderStage();
 setActiveTab(demos[currentDemoIndex].defaultTab || 'html');
+applyFontSizes(demos[currentDemoIndex]);
 
 function setContent(tab, code) {
   const view = views[tab];
@@ -233,7 +260,7 @@ function setContent(tab, code) {
 
 function applyVariant(demo, variant) {
   currentVariant = variant;
-  currentParams = {};
+  currentParams = { ...demo.defaultParams };
   setContent('html', resolveField(demo[variant].html, undefined, currentParams));
   setContent('css', resolveField(demo[variant].css, undefined, currentParams));
   setContent('js', resolveField(demo[variant].js, undefined, currentParams));
@@ -276,6 +303,7 @@ function selectDemo(index) {
   demoSelect.value = String(index);
   applyVariant(demos[index], 'problem');
   setActiveTab(demos[index].defaultTab || 'html');
+  applyFontSizes(demos[index]);
   if (location.hash.slice(1) !== demoSlugs[index]) {
     location.hash = demoSlugs[index];
   }

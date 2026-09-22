@@ -1,16 +1,13 @@
 /* ******************************************** center */
 const centering = {
   name: "I. Centering",
+  fontSize: { html: "1em", css: "1.2em" },
   problem: {
     html: `<div class="card">
   <button>Say, hey!</button>
 </div>`,
     css: `.card {
-  width: 70%;
-  height: 300px;
-  border-radius: 0.4rem;
-  background: #1c1c1c;
-  border: solid 1px #5b5b5b;
+  
 }
 `,
     js: ``
@@ -20,11 +17,6 @@ const centering = {
   <button>Say, hey!</button>
 </div>`,
     css: `.card {
-  width: 70%;
-  height: 300px;
-  border-radius: 0.4rem;
-  background: #1c1c1c;
-  border: solid 1px #5b5b5b;
   display: grid;
   place-items: center;
 }
@@ -37,6 +29,8 @@ const centering = {
 const contrastColor = {
   name: "II. Contrast Color",
   defaultTab: "css",
+  fontSize: { html: "1em", css: "1em" },
+  defaultParams: { bgColor: "#006fa7" },
   problem: {
     html: `<div class="card">
   <button>Say, hey!</button>
@@ -45,11 +39,6 @@ const contrastColor = {
     css: (code, params) => {
       if (!code) {
         return `.card {
-  width: 70%;
-  height: 300px;
-  border-radius: 0.4rem;
-  background: #1c1c1c;
-  border: solid 1px #5b5b5b;
   display: flex;
   flex-direction: column;
   gap: 1em;
@@ -57,13 +46,13 @@ const contrastColor = {
   align-items: center;
 }
 button {
-  --bg-color: ${params.bgColor || "#006fa7"};
+  --bg-color: ${params.bgColor};
   background: var(--bg-color);
   color: #fff;
 }
 `;
       }
-      return code.replace(/--bg-color:\s*[^;]+;/, `--bg-color: ${params.bgColor || "#006fa7"};`);
+      return code.replace(/--bg-color:\s*[^;]+;/, `--bg-color: ${params.bgColor};`);
     },
     js: `
       const input = document.querySelector('input[type="color"]');
@@ -79,19 +68,58 @@ button {
   solution: {
     html: `<div class="card">
   <button>Say, hey!</button>
+  <input type="color" />
 </div>`,
     css: `.card {
-  width: 70%;
-  height: 300px;
-  border-radius: 0.4rem;
-  background: #1c1c1c;
-  border: solid 1px #5b5b5b;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  justify-content: center;
+  align-items: center;
+}
+button {
+  --bg-color: #fff;
+  background: var(--bg-color);
+  color: contrast-color(var(--bg-color));
 }
 `,
     js: ``
   }
 };
 
-export const demos = [centering, contrastColor];
+/* ******************************************** theming */
+const theming = {
+  name: "III. Theming",
+  defaultTab: "css",
+  fontSize: { html: "1em", css: "0.8em" },
+  problem: {
+    html: `<div>
+  <div class="card">
+    <h1>Theming Demo</h1>
+  </div>
+</div>`,
+    css: `:root {
+  --scheme: light;
+}
+.dark { --scheme: dark; }
+.light { --scheme: light; }
+
+@function --theme-color(--light, --dark) {
+  result: var(--light);
+  @container style(--scheme: dark) {
+    result: var(--dark);
+  }
+}
+.card {
+  padding: 1em;
+  background: --theme-color(#fff, #1c1c1c);
+}
+h1 {
+  color: --theme-color(#14161a, #e8e8e8);
+}
+`,
+    js: ``
+  }
+};
+
+export const demos = [centering, contrastColor, theming];
