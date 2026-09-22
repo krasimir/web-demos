@@ -36,6 +36,8 @@ const bareTheme = EditorView.theme({
   },
 }, { dark: true });
 
+const demoNav = { prev: () => {}, next: () => {} };
+
 function makeExtensions(langExtension, onChange) {
   return [
     history(),
@@ -45,7 +47,13 @@ function makeExtensions(langExtension, onChange) {
     bareTheme,
     EditorView.lineWrapping,
     indentUnit.of('  '),
-    keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+    keymap.of([
+      { key: 'F7', run: () => { demoNav.prev(); return true; } },
+      { key: 'F9', run: () => { demoNav.next(); return true; } },
+      ...defaultKeymap,
+      ...historyKeymap,
+      indentWithTab,
+    ]),
     langExtension(),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) onChange();
@@ -173,4 +181,27 @@ demoSelect.addEventListener('change', () => {
 const solutionButton = document.getElementById('solution-btn');
 solutionButton.addEventListener('click', () => {
   applyVariant(demos[currentDemoIndex], 'solution');
+});
+
+function goToDemo(delta) {
+  const nextIndex = Math.min(Math.max(currentDemoIndex + delta, 0), demos.length - 1);
+  if (nextIndex === currentDemoIndex) return;
+  currentDemoIndex = nextIndex;
+  demoSelect.value = String(currentDemoIndex);
+  applyVariant(demos[currentDemoIndex], 'problem');
+  setActiveTab('html');
+}
+
+demoNav.prev = () => goToDemo(-1);
+demoNav.next = () => goToDemo(1);
+
+window.addEventListener('keydown', (e) => {
+  if (e.defaultPrevented) return;
+  if (e.key === 'F7') {
+    e.preventDefault();
+    goToDemo(-1);
+  } else if (e.key === 'F9') {
+    e.preventDefault();
+    goToDemo(1);
+  }
 });

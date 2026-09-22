@@ -1,7 +1,7 @@
 export const demos = [
   {
     /* ******************************************** center */
-    name: "1. Centering",
+    name: "I. Centering",
     problem: {
       html: `<div class="card">
   <button>Say, hey!</button>
@@ -26,6 +26,8 @@ export const demos = [
   border-radius: 0.4rem;
   background: #1c1c1c;
   border: solid 1px #5b5b5b;
+  display: grid;
+  place-items: center;
 }
 `,
       js: ``
