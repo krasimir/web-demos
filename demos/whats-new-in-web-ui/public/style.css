@@ -52,8 +52,9 @@ html, body {
 .toolbar {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  gap: .6rem 1rem;
   padding: 0.2em 1.5rem;
 }
 
@@ -88,6 +89,31 @@ html, body {
 .demo-select:focus {
   outline: none;
   border-color: #5b8cff;
+}
+
+.solution-btn {
+  order: 4;
+  appearance: none;
+  border: 1px solid #5b8cff;
+  border-radius: .4rem;
+  background: transparent;
+  color: #5b8cff;
+  font: inherit;
+  font-size: .6rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .5rem .9rem;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.solution-btn:hover {
+  background: #5b8cff;
+  color: #0b0c0f;
+}
+
+.solution-btn:active {
+  transform: translateY(1px);
 }
 
 .tab {

@@ -76,9 +76,9 @@ function scheduleRender() {
 }
 
 const views = {
-  html: createEditor(editorHosts.html, html, demos[0].html, scheduleRender),
-  css: createEditor(editorHosts.css, css, demos[0].css, scheduleRender),
-  js: createEditor(editorHosts.js, javascript, demos[0].js, scheduleRender),
+  html: createEditor(editorHosts.html, html, demos[0].problem.html, scheduleRender),
+  css: createEditor(editorHosts.css, css, demos[0].problem.css, scheduleRender),
+  js: createEditor(editorHosts.js, javascript, demos[0].problem.js, scheduleRender),
 };
 
 function renderStage() {
@@ -140,12 +140,13 @@ function setContent(tab, code) {
   view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: code } });
 }
 
-function applyDemo(demo) {
-  setContent('html', demo.html);
-  setContent('css', demo.css);
-  setContent('js', demo.js);
-  setActiveTab('html');
+function applyVariant(demo, variant) {
+  setContent('html', demo[variant].html);
+  setContent('css', demo[variant].css);
+  setContent('js', demo[variant].js);
 }
+
+let currentDemoIndex = 0;
 
 const demoSelect = document.getElementById('demo-select');
 demos.forEach((demo, index) => {
@@ -155,5 +156,12 @@ demos.forEach((demo, index) => {
   demoSelect.appendChild(option);
 });
 demoSelect.addEventListener('change', () => {
-  applyDemo(demos[demoSelect.value]);
+  currentDemoIndex = Number(demoSelect.value);
+  applyVariant(demos[currentDemoIndex], 'problem');
+  setActiveTab('html');
+});
+
+const solutionButton = document.getElementById('solution-btn');
+solutionButton.addEventListener('click', () => {
+  applyVariant(demos[currentDemoIndex], 'solution');
 });

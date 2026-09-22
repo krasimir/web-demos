@@ -1,10 +1,11 @@
 export const demos = [
   {
     name: 'Card + button',
-    html: `<div class="card">
+    problem: {
+      html: `<div class="card">
   <button>Say, hey!</button>
 </div>`,
-    css: `.card {
+      css: `.card {
   width: 70%;
   height: 300px;
   border-radius: 0.4rem;
@@ -20,16 +21,68 @@ button {
   color: #fff;
 }
 `,
-    js: `console.log('Playground ready.');`,
+      js: `console.log('Playground ready.');`,
+    },
+    solution: {
+      html: `<div class="card">
+  <button>Say, hey!</button>
+</div>`,
+      css: `.card {
+  width: 70%;
+  height: 300px;
+  border-radius: 0.4rem;
+  background: #1c1c1c;
+  border: solid 1px #5b5b5b;
+}
+button {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: #006fa7;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+button:hover {
+  background: #0089cf;
+}
+`,
+      js: `document.querySelector('button').addEventListener('click', () => {
+  alert('Hey!');
+});`,
+    },
   },
   {
     name: 'CSS color-mix()',
-    html: `<div class="swatches">
+    problem: {
+      html: `<div class="swatches">
   <div class="swatch a"></div>
   <div class="swatch b"></div>
   <div class="swatch c"></div>
 </div>`,
-    css: `.swatches {
+      css: `.swatches {
+  display: flex;
+  gap: 1rem;
+}
+.swatch {
+  width: 100px;
+  height: 100px;
+  border-radius: 0.75rem;
+}
+.a { background: #2850c8; }
+.b { background: #8ba0e4; }
+.c { background: #d6ddf6; }
+`,
+      js: `console.log('Playground ready.');`,
+    },
+    solution: {
+      html: `<div class="swatches">
+  <div class="swatch a"></div>
+  <div class="swatch b"></div>
+  <div class="swatch c"></div>
+</div>`,
+      css: `.swatches {
   display: flex;
   gap: 1rem;
 }
@@ -42,6 +95,7 @@ button {
 .b { background: color-mix(in oklab, royalblue 50%, white); }
 .c { background: color-mix(in oklab, royalblue 20%, white); }
 `,
-    js: `console.log('Playground ready.');`,
+      js: `console.log('Playground ready.');`,
+    },
   },
 ];
