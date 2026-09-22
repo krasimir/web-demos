@@ -36,6 +36,7 @@ const centering = {
 /* ******************************************** contrast-color */
 const contrastColor = {
   name: "II. Contrast Color",
+  defaultTab: "css",
   problem: {
     html: `<div class="card">
   <button>Say, hey!</button>

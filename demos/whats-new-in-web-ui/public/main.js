@@ -224,6 +224,7 @@ tabs.forEach((tab) => {
 });
 
 renderStage();
+setActiveTab(demos[currentDemoIndex].defaultTab || 'html');
 
 function setContent(tab, code) {
   const view = views[tab];
@@ -274,7 +275,7 @@ function selectDemo(index) {
   currentDemoIndex = index;
   demoSelect.value = String(index);
   applyVariant(demos[index], 'problem');
-  setActiveTab('html');
+  setActiveTab(demos[index].defaultTab || 'html');
   if (location.hash.slice(1) !== demoSlugs[index]) {
     location.hash = demoSlugs[index];
   }
