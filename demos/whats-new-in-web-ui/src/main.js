@@ -1,12 +1,16 @@
-import { EditorState } from '@codemirror/state';
+import { EditorState, Compartment } from '@codemirror/state';
 import { EditorView, keymap, drawSelection } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { html } from '@codemirror/lang-html';
 import { css } from '@codemirror/lang-css';
 import { javascript } from '@codemirror/lang-javascript';
-import { syntaxHighlighting, indentUnit } from '@codemirror/language';
+import { syntaxHighlighting, indentUnit, defaultHighlightStyle } from '@codemirror/language';
 import { oneDarkTheme, oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { demos } from './demos.js';
+
+const themeCompartment = new Compartment();
+const darkEditorTheme = [oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)];
+const lightEditorTheme = [syntaxHighlighting(defaultHighlightStyle)];
 
 const bareTheme = EditorView.theme({
   '&': {
@@ -16,7 +20,7 @@ const bareTheme = EditorView.theme({
   '.cm-content': {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
     padding: 0,
-    caretColor: '#fff',
+    caretColor: 'var(--cm-caret)',
   },
   '.cm-gutters': {
     display: 'none',
@@ -42,8 +46,7 @@ function makeExtensions(langExtension, onChange) {
   return [
     history(),
     drawSelection(),
-    syntaxHighlighting(oneDarkHighlightStyle),
-    oneDarkTheme,
+    themeCompartment.of(darkEditorTheme),
     bareTheme,
     EditorView.lineWrapping,
     indentUnit.of('  '),
@@ -93,6 +96,9 @@ function renderStage() {
   const htmlCode = views.html.state.doc.toString();
   const cssCode = views.css.state.doc.toString();
   const jsCode = views.js.state.doc.toString();
+  const isLight = document.documentElement.dataset.theme === 'light';
+  const stageBg = isLight ? '#ffffff' : '#0b0c0f';
+  const stageFg = isLight ? '#14161a' : '#e8e8e8';
 
   stage.srcdoc = `<!doctype html>
 <html>
@@ -109,8 +115,8 @@ function renderStage() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0b0c0f;
-    color: #e8e8e8;
+    background: ${stageBg};
+    color: ${stageFg};
     font-family: system-ui, -apple-system, sans-serif;
   }
   button {
@@ -181,6 +187,21 @@ demoSelect.addEventListener('change', () => {
 const solutionButton = document.getElementById('solution-btn');
 solutionButton.addEventListener('click', () => {
   applyVariant(demos[currentDemoIndex], 'solution');
+});
+
+const themeButton = document.getElementById('theme-btn');
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeButton.textContent = theme === 'light' ? '🌙' : '☀️';
+  Object.values(views).forEach((view) => {
+    view.dispatch({
+      effects: themeCompartment.reconfigure(theme === 'light' ? lightEditorTheme : darkEditorTheme),
+    });
+  });
+  renderStage();
+}
+themeButton.addEventListener('click', () => {
+  setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
 });
 
 function goToDemo(delta) {
