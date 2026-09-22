@@ -1,12 +1,11 @@
-export const demos = [
-  {
-    /* ******************************************** center */
-    name: "I. Centering",
-    problem: {
-      html: `<div class="card">
+/* ******************************************** center */
+const centering = {
+  name: "I. Centering",
+  problem: {
+    html: `<div class="card">
   <button>Say, hey!</button>
 </div>`,
-      css: `.card {
+    css: `.card {
   width: 70%;
   height: 300px;
   border-radius: 0.4rem;
@@ -14,13 +13,13 @@ export const demos = [
   border: solid 1px #5b5b5b;
 }
 `,
-      js: ``
-    },
-    solution: {
-      html: `<div class="card">
+    js: ``
+  },
+  solution: {
+    html: `<div class="card">
   <button>Say, hey!</button>
 </div>`,
-      css: `.card {
+    css: `.card {
   width: 70%;
   height: 300px;
   border-radius: 0.4rem;
@@ -30,7 +29,45 @@ export const demos = [
   place-items: center;
 }
 `,
-      js: ``
-    }
+    js: ``
+  }
+};
+
+/* ******************************************** contrast-color */
+const contrastColor = {
+  name: "II. Contrast Color",
+  problem: {
+    html: `<div class="card">
+  <button>Say, hey!</button>
+</div>`,
+    css: `.card {
+  width: 70%;
+  height: 300px;
+  border-radius: 0.4rem;
+  background: #1c1c1c;
+  border: solid 1px #5b5b5b;
+  display: grid;
+  place-items: center;
+}
+`,
+    js: ``
   },
-];
+  solution: {
+    html: `<div class="card">
+  <button>Say, hey!</button>
+</div>`,
+    css: `.card {
+  width: 70%;
+  height: 300px;
+  border-radius: 0.4rem;
+  background: #1c1c1c;
+  border: solid 1px #5b5b5b;
+  display: grid;
+  place-items: center;
+}
+`,
+    js: ``
+  }
+};
+
+export const demos = [centering, contrastColor];

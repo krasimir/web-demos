@@ -42,6 +42,17 @@ const bareTheme = EditorView.theme({
 
 const demoNav = { prev: () => {}, next: () => {} };
 
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+const demoSlugs = demos.map((demo) => slugify(demo.name));
+
+function demoIndexFromHash() {
+  const index = demoSlugs.indexOf(location.hash.slice(1));
+  return index === -1 ? 0 : index;
+}
+
 function makeExtensions(langExtension, onChange) {
   return [
     history(),
@@ -86,10 +97,12 @@ function scheduleRender() {
   renderTimer = setTimeout(renderStage, 150);
 }
 
+let currentDemoIndex = demoIndexFromHash();
+
 const views = {
-  html: createEditor(editorHosts.html, html, demos[0].problem.html, scheduleRender),
-  css: createEditor(editorHosts.css, css, demos[0].problem.css, scheduleRender),
-  js: createEditor(editorHosts.js, javascript, demos[0].problem.js, scheduleRender),
+  html: createEditor(editorHosts.html, html, demos[currentDemoIndex].problem.html, scheduleRender),
+  css: createEditor(editorHosts.css, css, demos[currentDemoIndex].problem.css, scheduleRender),
+  js: createEditor(editorHosts.js, javascript, demos[currentDemoIndex].problem.js, scheduleRender),
 };
 
 function renderStage() {
@@ -169,8 +182,6 @@ function applyVariant(demo, variant) {
   setContent('js', demo[variant].js);
 }
 
-let currentDemoIndex = 0;
-
 const demoSelect = document.getElementById('demo-select');
 demos.forEach((demo, index) => {
   const option = document.createElement('option');
@@ -178,10 +189,23 @@ demos.forEach((demo, index) => {
   option.textContent = demo.name;
   demoSelect.appendChild(option);
 });
-demoSelect.addEventListener('change', () => {
-  currentDemoIndex = Number(demoSelect.value);
-  applyVariant(demos[currentDemoIndex], 'problem');
+demoSelect.value = String(currentDemoIndex);
+if (location.hash.slice(1) !== demoSlugs[currentDemoIndex]) {
+  window.history.replaceState(null, '', `#${demoSlugs[currentDemoIndex]}`);
+}
+
+function selectDemo(index) {
+  currentDemoIndex = index;
+  demoSelect.value = String(index);
+  applyVariant(demos[index], 'problem');
   setActiveTab('html');
+  if (location.hash.slice(1) !== demoSlugs[index]) {
+    location.hash = demoSlugs[index];
+  }
+}
+
+demoSelect.addEventListener('change', () => {
+  selectDemo(Number(demoSelect.value));
 });
 
 const solutionButton = document.getElementById('solution-btn');
@@ -207,14 +231,16 @@ themeButton.addEventListener('click', () => {
 function goToDemo(delta) {
   const nextIndex = Math.min(Math.max(currentDemoIndex + delta, 0), demos.length - 1);
   if (nextIndex === currentDemoIndex) return;
-  currentDemoIndex = nextIndex;
-  demoSelect.value = String(currentDemoIndex);
-  applyVariant(demos[currentDemoIndex], 'problem');
-  setActiveTab('html');
+  selectDemo(nextIndex);
 }
 
 demoNav.prev = () => goToDemo(-1);
 demoNav.next = () => goToDemo(1);
+
+window.addEventListener('hashchange', () => {
+  const index = demoIndexFromHash();
+  if (index !== currentDemoIndex) selectDemo(index);
+});
 
 window.addEventListener('keydown', (e) => {
   if (e.defaultPrevented) return;
