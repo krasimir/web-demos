@@ -4,8 +4,8 @@
   "description": "Split-screen playground (HTML/CSS/JS editor + live result) for demoing new web platform features",
   "main": "server.js",
   "scripts": {
-    "build": "esbuild src/main.js --bundle --outfile=public/bundle.js --format=iife",
-    "start": "npm run build && node server.js"
+    "build:vendor": "esbuild vendor-entry.js --bundle --format=esm --outfile=public/vendor/codemirror.js",
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2"

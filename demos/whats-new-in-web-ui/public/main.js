@@ -1,11 +1,11 @@
-import { EditorState, Compartment } from '@codemirror/state';
-import { EditorView, keymap, drawSelection } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { html } from '@codemirror/lang-html';
-import { css } from '@codemirror/lang-css';
-import { javascript } from '@codemirror/lang-javascript';
-import { syntaxHighlighting, indentUnit, defaultHighlightStyle } from '@codemirror/language';
-import { oneDarkTheme, oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
+import {
+  EditorState, Compartment,
+  EditorView, keymap, drawSelection,
+  defaultKeymap, history, historyKeymap, indentWithTab,
+  html, css, javascript,
+  syntaxHighlighting, indentUnit, defaultHighlightStyle,
+  oneDarkTheme, oneDarkHighlightStyle,
+} from './vendor/codemirror.js';
 import { demos } from './demos.js';
 
 const themeCompartment = new Compartment();
