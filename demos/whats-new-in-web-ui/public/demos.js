@@ -91,13 +91,20 @@ button {
 const theming = {
   name: "III. Theming",
   defaultTab: "css",
-  fontSize: { html: "1em", css: "0.8em" },
+  fontSize: { html: "0.8em", css: "0.8em" },
   problem: {
-    html: `<div>
+    html: (code, params) => {
+      const containerClass = params?.scheme === "dark" ? "dark" : "light";
+      return `<div class="${containerClass}" id="container">
   <div class="card">
     <h1>Theming Demo</h1>
   </div>
-</div>`,
+  <nav>
+    <button id="dark-btn">dark</button>
+    <button id="light-btn">light</button>
+  </nav>
+</div>`;
+    },
     css: `:root {
   --scheme: light;
 }
@@ -118,7 +125,16 @@ h1 {
   color: --theme-color(#14161a, #e8e8e8);
 }
 `,
-    js: ``
+    js: `const darkButton = document.getElementById('dark-btn');
+const lightButton = document.getElementById('light-btn');
+const container = document.getElementById('container');
+darkButton.addEventListener('click', () => {
+  updateDemoParams({ scheme: 'dark' });
+});
+lightButton.addEventListener('click', () => {
+  updateDemoParams({ scheme: 'light' });
+});
+    `
   }
 };
 

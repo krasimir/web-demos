@@ -211,6 +211,11 @@ function renderStage() {
     background: #1c1c1c;
     border: solid 1px #5b5b5b;
   }
+  nav {
+    display: flex;
+    gap: 0.5em;
+    margin-top: 1em;
+  }
 </style>
 <style id="demo-css">${cssCode}</style>
 </head>
@@ -304,6 +309,7 @@ function selectDemo(index) {
   applyVariant(demos[index], 'problem');
   setActiveTab(demos[index].defaultTab || 'html');
   applyFontSizes(demos[index]);
+  updateSolutionButton(demos[index]);
   if (location.hash.slice(1) !== demoSlugs[index]) {
     location.hash = demoSlugs[index];
   }
@@ -317,6 +323,11 @@ const solutionButton = document.getElementById('solution-btn');
 solutionButton.addEventListener('click', () => {
   applyVariant(demos[currentDemoIndex], 'solution');
 });
+
+function updateSolutionButton(demo) {
+  solutionButton.hidden = !demo.solution;
+}
+updateSolutionButton(demos[currentDemoIndex]);
 
 const themeButton = document.getElementById('theme-btn');
 function setTheme(theme) {
