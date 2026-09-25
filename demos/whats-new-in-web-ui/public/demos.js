@@ -1,6 +1,6 @@
 /* ******************************************** center */
 const centering = {
-  name: "I. Centering",
+  name: "I. The biggest problem",
   fontSize: { html: "1.2em", css: "1.2em" },
   problem: {
     html: `<div class="card">
@@ -228,4 +228,117 @@ dialog[open]::backdrop {
   }
 };
 
-export const demos = [centering, contrastColor, ifelse, dialog];
+/* ******************************************** view transitions */
+const viewTransitions = {
+  name: "V. View Transitions",
+  defaultTab: "html",
+  fontSize: { html: "0.9em", css: "0.75em" },
+  problem: {
+    html: `<div class="product" id="product">
+  <img
+    class="product-image"
+    src="/images/product.jpg"
+    alt="Inter" />
+  <p class="product-name">
+    FC Inter home match jersey 2025/26
+  </p>
+</div>`,
+    css: `.product {
+  width: 300px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  padding: 1.5em;
+}
+.product:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.product.expanded {
+  width: 400px;
+  cursor: default;
+  flex-direction: row;
+  align-items: flex-start;
+  text-align: left;
+  gap: 1.25em;
+  border: dashed 6px #333333;
+}
+.product-image {
+  width: 220px;
+  border-radius: 0.75rem;
+  view-transition-name: product-image;
+}
+.product.expanded .product-image {
+  width: 100px;
+  flex-shrink: 0;
+}
+.product-name {
+  font-weight: bold;
+  font-size: 1.15em;
+  margin: 0;
+  view-transition-name: product-name;
+}
+.product.expanded .product-name {
+  font-size: 1em;
+}
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+.product-price {
+  color: #6eff9c;
+  font-weight: 700;
+  font-size: 1.1em;
+  margin: 0;
+}
+.product-desc {
+  color: #b8bcc4;
+  font-size: 0.8em;
+  line-height: 1.4;
+  margin: 0;
+}
+.close-btn {
+  margin-top: 0.2em;
+}
+::view-transition-group(product-image),
+::view-transition-group(product-name) {
+  animation-duration: 0.6s;
+  animation-timing-function: ease-in-out;
+}
+`,
+    js: `const product = document.getElementById('product');
+
+const cardMarkup = \`
+  <img class="product-image" src="/images/product.jpg" alt="Inter" />
+  <p class="product-name">FC Inter home match jersey 2025/26</p>
+\`;
+
+const detailMarkup = \`
+  <img class="product-image" src="/images/product.jpg" alt="Inter" />
+  <div class="product-info">
+    <p class="product-name">FC Inter home match jersey 2025/26</p>
+    <p class="product-price">€ 73,77</p>
+    <p class="product-desc">
+      Official home match jersey for FC Inter's 2025/26 season. Made with high-quality materials for comfort and performance on the pitch.
+    </p>
+    <button class="close-btn" id="close-btn">← Back</button>
+  </div>
+\`;
+
+let expanded = false;
+product.addEventListener('click', (e) => {
+  if (expanded) {
+    product.innerHTML = cardMarkup;
+    product.classList.remove('expanded');
+  } else {
+    product.innerHTML = detailMarkup;
+    product.classList.add('expanded');
+  }
+  expanded = !expanded;
+});
+`
+  }
+};
+
+export const demos = [centering, contrastColor, ifelse, dialog, viewTransitions];
