@@ -291,12 +291,14 @@ const viewTransitions = {
   font-weight: 700;
   font-size: 1.1em;
   margin: 0;
+  view-transition-name: product-price;
 }
 .product-desc {
   color: #b8bcc4;
   font-size: 0.8em;
   line-height: 1.4;
   margin: 0;
+  view-transition-name: product-desc;
 }
 .close-btn {
   margin-top: 0.2em;
