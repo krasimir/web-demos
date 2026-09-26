@@ -8,18 +8,21 @@
   .controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
   select, button { padding: 8px 12px; font-size: 14px; }
   button { cursor: pointer; }
-  .views { display: flex; gap: 16px; flex-wrap: wrap; }
+  .views { display: grid; gap: 16px; grid-template-columns: 3fr 1fr; }
   .views figure { margin: 0; }
   .views figcaption { font-size: 13px; color: #666; margin-top: 6px; }
-  video, canvas { width: 420px; height: 315px; background: #111; border: 1px solid #ccc; display: block; }
+  video, canvas { width: 100%; height: auto; background: #111; border: 1px solid #ccc; display: block; }
   #status { min-height: 20px; font-weight: bold; margin-bottom: 12px; }
   #download-link { display: none; margin-top: 8px; }
+  #smile-panel { margin-top: 24px; }
+  #smile-status { font-size: 15px; }
+  .face-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  .face-bar { width: 240px; height: 30px; background: #eee; border-radius: 5px; overflow: hidden; }
+  .face-bar-fill { height: 100%; background: #4caf50; }
+  #smile-status { font-size: 3em;}
 </style>
 </head>
 <body>
-  <h1>Camera Capture</h1>
-  <p>Grants access to a connected camera (built-in or external, e.g. a Logitech webcam), shows a live preview, and lets you capture a still frame to a canvas.</p>
-
   <div class="controls">
     <select id="camera-select"></select>
     <button id="capture-btn">Capture photo</button>
@@ -39,6 +42,11 @@
     </figure>
   </div>
 
-  <script src="main.js"></script>
+  <div id="smile-panel">
+    <h2>Smile detector</h2>
+    <div id="smile-status">Loading model...</div>
+  </div>
+
+  <script type="module" src="main.js"></script>
 </body>
 </html>

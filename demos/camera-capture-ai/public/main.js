@@ -1,3 +1,10 @@
+import {
+  FaceLandmarker,
+  FilesetResolver,
+} from './vendor/tasks-vision/vision_bundle.mjs';
+
+const SMILE_THRESHOLD = 0.4;
+
 const video = document.getElementById('preview');
 const canvas = document.getElementById('snapshot');
 const ctx = canvas.getContext('2d');
@@ -58,6 +65,61 @@ captureBtn.addEventListener('click', () => {
   }, 'image/png');
 });
 
+const smileStatusEl = document.getElementById('smile-status');
+
+async function initSmileDetector() {
+  const filesetResolver = await FilesetResolver.forVisionTasks('./vendor/tasks-vision/wasm');
+
+  const faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+    baseOptions: {
+      modelAssetPath: './models/face_landmarker.task',
+      delegate: 'GPU',
+    },
+    outputFaceBlendshapes: true,
+    runningMode: 'VIDEO',
+    numFaces: 5,
+  });
+
+  smileStatusEl.textContent = 'No face detected';
+
+  const detect = () => {
+    if (video.readyState >= 2) {
+      const result = faceLandmarker.detectForVideo(video, performance.now());
+      renderSmileStatus(result.faceBlendshapes);
+    }
+    requestAnimationFrame(detect);
+  };
+  requestAnimationFrame(detect);
+}
+
+function smileScore(blendshapes) {
+  const categories = blendshapes.categories;
+  const left = categories.find((c) => c.categoryName === 'mouthSmileLeft')?.score ?? 0;
+  const right = categories.find((c) => c.categoryName === 'mouthSmileRight')?.score ?? 0;
+  return (left + right) / 2;
+}
+
+function renderSmileStatus(faceBlendshapes) {
+  if (!faceBlendshapes.length) {
+    smileStatusEl.textContent = 'No face detected';
+    return;
+  }
+
+  smileStatusEl.innerHTML = '';
+  faceBlendshapes.forEach((blendshapes, i) => {
+    const score = smileScore(blendshapes);
+    const isSmiling = score > SMILE_THRESHOLD;
+
+    const row = document.createElement('div');
+    row.className = 'face-row';
+    row.innerHTML = `
+      <span>${isSmiling ? '😊' : '😐'} Face ${i + 1}</span>
+      <div class="face-bar"><div class="face-bar-fill" style="width:${Math.round(score * 100)}%"></div></div>
+    `;
+    smileStatusEl.appendChild(row);
+  });
+}
+
 (async () => {
   try {
     // Request access first so device labels are populated, then list cameras.
@@ -74,4 +136,8 @@ captureBtn.addEventListener('click', () => {
   } catch (err) {
     statusEl.textContent = `Could not access camera: ${err.message}`;
   }
+
+  initSmileDetector().catch((err) => {
+    smileStatusEl.textContent = `Could not load smile detector: ${err.message}`;
+  });
 })();
