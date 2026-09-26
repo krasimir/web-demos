@@ -306,18 +306,17 @@ const viewTransitions = {
 
 let expanded = false;
 product.addEventListener('click', (e) => {
-  // document.startViewTransition(() => {
-    if (expanded) {
-      product.innerHTML = cardMarkup;
-      product.classList.remove('expanded');
-    } else {
-      product.innerHTML = detailMarkup;
-      product.classList.add('expanded');
-    }
-    expanded = !expanded;
-  // });
-  console.log('test')
-  // window.location.href = '/product.html'
+  // // document.startViewTransition(() => {
+  //   if (expanded) {
+  //     product.innerHTML = cardMarkup;
+  //     product.classList.remove('expanded');
+  //   } else {
+  //     product.innerHTML = detailMarkup;
+  //     product.classList.add('expanded');
+  //   }
+  //   expanded = !expanded;
+  // // });
+  window.location.href = '/product.html'
 });
 `
   },

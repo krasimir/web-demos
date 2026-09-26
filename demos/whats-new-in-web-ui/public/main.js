@@ -168,6 +168,9 @@ function renderStage() {
 <head>
 <meta charset="utf-8">
 <style>
+  @view-transition {
+    navigation: auto;
+  }
   html, body {
     margin: 0;
     min-height: 100%;
