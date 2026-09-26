@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-size: 28px;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0b0c0f;
+      color: #e8e8e8;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    button {
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      background: #006fa7;
+      color: #fff;
+      cursor: pointer;
+    }
+    .product {
+      width: 300px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75em;
+      padding: 1.5em;
+      border-radius: 0.75rem;
+      background: #1c1c1c;
+    }
+    .product:hover {
+      border: dashed 6px #333333;
+    }
+    .product.expanded {
+      width: 400px;
+      cursor: default;
+      flex-direction: row;
+      align-items: flex-start;
+      text-align: left;
+      gap: 1.25em;
+      border: dashed 6px #333333;
+    }
+    .product-image {
+      width: 220px;
+      border-radius: 0.75rem;
+      view-transition-name: product-image;
+    }
+    .product.expanded .product-image {
+      width: 100px;
+      flex-shrink: 0;
+    }
+    .product-name {
+      font-weight: bold;
+      font-size: 1.15em;
+      margin: 0;
+      view-transition-name: product-name;
+    }
+    .product.expanded .product-name {
+      font-size: 1em;
+    }
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4em;
+    }
+    .product-price {
+      color: #6eff9c;
+      font-weight: 700;
+      font-size: 1.1em;
+      margin: 0;
+      view-transition-name: product-price;
+    }
+    .product-desc {
+      color: #b8bcc4;
+      font-size: 0.8em;
+      line-height: 1.4;
+      margin: 0;
+      view-transition-name: product-desc;
+    }
+    .close-btn {
+      view-transition-name: close-btn;
+      margin-top: 0.2em;
+    }
+    ::view-transition-group(product-image),
+    ::view-transition-group(product-name),
+    ::view-transition-group(close-btn) {
+      animation-duration: 1s;
+      animation-timing-function: cubic-bezier(1,-0.06,.14,.94);
+    }
+    ::view-transition-new(product-price),
+    ::view-transition-new(product-desc),
+    ::view-transition-new(close-btn) {
+      opacity: 0;
+      animation: fade-in 0.4s ease-out;
+      animation-delay: 0.8s;
+    }
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="product" id="product">
+      <img class="product-image" src="/images/product.jpg" alt="Inter" />
+      <div class="product-info">
+        <p class="product-name">FC Inter home match jersey 2025/26</p>
+        <p class="product-price">€ 73,77</p>
+        <p class="product-desc">
+          Official home match jersey for FC Inter's 2025/26 season. Made with high-quality materials for comfort and performance on the pitch.
+        </p>
+        <button class="close-btn" id="close-btn" onClick="history.back()">← Back</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

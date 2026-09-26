@@ -316,6 +316,8 @@ product.addEventListener('click', (e) => {
     }
     expanded = !expanded;
   // });
+  console.log('test')
+  // window.location.href = '/product.html'
 });
 `
   },
