@@ -306,17 +306,16 @@ const viewTransitions = {
 
 let expanded = false;
 product.addEventListener('click', (e) => {
-  // // document.startViewTransition(() => {
-  //   if (expanded) {
-  //     product.innerHTML = cardMarkup;
-  //     product.classList.remove('expanded');
-  //   } else {
-  //     product.innerHTML = detailMarkup;
-  //     product.classList.add('expanded');
-  //   }
-  //   expanded = !expanded;
-  // // });
-  window.location.href = '/product.html'
+  // document.startViewTransition(() => {
+    if (expanded) {
+      product.innerHTML = cardMarkup;
+      product.classList.remove('expanded');
+    } else {
+      product.innerHTML = detailMarkup;
+      product.classList.add('expanded');
+    }
+    expanded = !expanded;
+  // });
 });
 `
   },
@@ -330,7 +329,10 @@ product.addEventListener('click', (e) => {
     FC Inter home match jersey 2025/26
   </p>
 </div>`,
-    css: `.product {
+    css: `@view-transition {
+  navigation: auto;
+}
+.product {
   width: 300px;
   cursor: pointer;
   display: flex;
@@ -431,6 +433,8 @@ product.addEventListener('click', (e) => {
     }
     expanded = !expanded;
   });
+
+  // window.location.href = '/product.html'
 });
 `
   }
