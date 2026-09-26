@@ -1,0 +1,6 @@
+<video autoplay playsinline></video>
+<script>
+navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+  document.querySelector('video').srcObject = stream;
+});
+</script>

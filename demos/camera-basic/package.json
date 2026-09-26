@@ -1,7 +1,7 @@
 {
-  "name": "camera-capture-demo",
+  "name": "camera-basic-demo",
   "version": "1.0.0",
-  "description": "Capture a still photo from a connected camera using getUserMedia, no frameworks",
+  "description": "Bare minimum getUserMedia camera feed",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

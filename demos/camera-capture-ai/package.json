@@ -1,0 +1,12 @@
+{
+  "name": "camera-capture-ai-demo",
+  "version": "1.0.0",
+  "description": "Capture a still photo from a connected camera using getUserMedia, no frameworks",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
