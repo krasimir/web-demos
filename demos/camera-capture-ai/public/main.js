@@ -66,6 +66,8 @@ captureBtn.addEventListener('click', () => {
 });
 
 const smileStatusEl = document.getElementById('smile-status');
+const overlay = document.getElementById('overlay');
+const overlayCtx = overlay.getContext('2d');
 
 async function initSmileDetector() {
   const filesetResolver = await FilesetResolver.forVisionTasks('./vendor/tasks-vision/wasm');
@@ -84,12 +86,37 @@ async function initSmileDetector() {
 
   const detect = () => {
     if (video.readyState >= 2) {
+      overlay.width = video.videoWidth;
+      overlay.height = video.videoHeight;
+
       const result = faceLandmarker.detectForVideo(video, performance.now());
       renderSmileStatus(result.faceBlendshapes);
+      drawFaceBoxes(result.faceLandmarks, result.faceBlendshapes);
     }
     requestAnimationFrame(detect);
   };
   requestAnimationFrame(detect);
+}
+
+function drawFaceBoxes(faceLandmarksList, faceBlendshapesList) {
+  overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+
+  faceLandmarksList.forEach((landmarks, i) => {
+    const xs = landmarks.map((p) => p.x * overlay.width);
+    const ys = landmarks.map((p) => p.y * overlay.height);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const isSmiling = smileScore(faceBlendshapesList[i]) > SMILE_THRESHOLD;
+
+    overlayCtx.strokeStyle = isSmiling ? '#4caf50' : '#f44336';
+    overlayCtx.lineWidth = 3;
+    overlayCtx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+
+    overlayCtx.font = '32px sans-serif';
+    overlayCtx.fillText(isSmiling ? '😊' : '😐', minX, minY - 8);
+  });
 }
 
 function smileScore(blendshapes) {
