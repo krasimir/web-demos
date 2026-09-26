@@ -140,7 +140,7 @@ function renderSmileStatus(faceBlendshapes) {
     const row = document.createElement('div');
     row.className = 'face-row';
     row.innerHTML = `
-      <span>${isSmiling ? '😊' : '😐'} Face ${i + 1}</span>
+      <span>${isSmiling ? '😊' : '😐'}</span>
       <div class="face-bar"><div class="face-bar-fill" style="width:${Math.round(score * 100)}%"></div></div>
     `;
     smileStatusEl.appendChild(row);
