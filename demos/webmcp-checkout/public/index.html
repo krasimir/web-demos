@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Registration Demo</title>
+<style>
+  body { font-family: sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; color: #222; font-size: 16px; }
+  h1 { margin-bottom: 4px; }
+  .subtitle { color: #666; margin-top: 0; }
+
+  .panel { border: 1px solid #ddd; border-radius: 8px; padding: 18px 20px; }
+  .panel h2 { margin-top: 0; font-size: 2em; }
+
+  label { display: block; font-size: 1em; color: #444; margin: 10px 0 4px; }
+  input { width: 100%; padding: 8px; font-size: 1em; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+  input.field-highlight { animation: flash 0.9s ease; }
+  @keyframes flash { 0% { background: #fff6b0; } 100% { background: #fff; } }
+  input.invalid { border-color: #b33; }
+  input.valid { border-color: #1a6b34; }
+
+  .field-feedback { font-size: 0.8em; min-height: 16px; margin-top: 4px; }
+  .field-feedback.valid { color: #1a6b34; }
+  .field-feedback.invalid { color: #b33; }
+
+  button { cursor: pointer; padding: 8px 14px; font-size: 1em; border: 1px solid #999; border-radius: 4px; background: #f5f5f5; }
+  button:hover { background: #ececec; }
+  button.primary { background: #1a6b34; color: #fff; border-color: #1a6b34; }
+  button.primary:hover { background: #155429; }
+
+  #submit-btn { width: 100%; margin-top: 16px; }
+  #registration-status { margin-top: 12px; font-size: 1em; min-height: 20px; }
+  #registration-status.success { color: #1a6b34; font-weight: bold; }
+  #registration-status.error { color: #b33; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>Registration</h1>
+  <div class="panel" id="registration-panel">
+    <h2>Sign up</h2>
+
+    <label for="name">Full name</label>
+    <input id="name" type="text" placeholder="Ada Lovelace">
+    <div id="name-feedback" class="field-feedback"></div>
+
+    <label for="email">Email</label>
+    <input id="email" type="email" placeholder="ada@example.com">
+    <div id="email-feedback" class="field-feedback"></div>
+
+    <label for="phone">Phone number</label>
+    <input id="phone" type="tel" placeholder="+1 555 123 4567">
+    <div id="phone-feedback" class="field-feedback"></div>
+
+    <button id="submit-btn" class="primary">Register</button>
+    <div id="registration-status"></div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

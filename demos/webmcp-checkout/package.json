@@ -1,0 +1,12 @@
+{
+  "name": "webmcp-checkout-demo",
+  "version": "1.0.0",
+  "description": "Checkout form that exposes WebMCP tools (navigator.modelContext) so an agent can fill it in and place the order",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
