@@ -115,7 +115,7 @@ function drawFaceBoxes(faceLandmarksList, faceBlendshapesList) {
     overlayCtx.strokeRect(minX, minY, maxX - minX, maxY - minY);
 
     overlayCtx.font = '32px sans-serif';
-    overlayCtx.fillText(isSmiling ? '😊' : '😐', minX, minY - 8);
+    overlayCtx.fillText('😊', minX, minY - 8);
   });
 }
 
@@ -142,6 +142,7 @@ function renderSmileStatus(faceBlendshapes) {
     row.innerHTML = `
       <span>${isSmiling ? '😊' : '😐'}</span>
       <div class="face-bar"><div class="face-bar-fill" style="width:${Math.round(score * 100)}%"></div></div>
+      <span>${isSmiling ? 'Smiling' : ''}</span>
     `;
     smileStatusEl.appendChild(row);
   });
