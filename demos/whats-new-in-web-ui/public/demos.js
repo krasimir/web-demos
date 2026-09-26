@@ -267,7 +267,7 @@ const viewTransitions = {
   background: #1c1c1c;
 }
 .product:hover {
-  background: #363636;
+  border: dashed 6px #333333;
 }
 .product.expanded {
   width: 400px;
@@ -340,7 +340,7 @@ product.addEventListener('click', (e) => {
   background: #1c1c1c;
 }
 .product:hover {
-  background: #363636;
+  border: dashed 6px #333333;
 }
 .product.expanded {
   width: 400px;
@@ -389,12 +389,31 @@ product.addEventListener('click', (e) => {
   view-transition-name: product-desc;
 }
 .close-btn {
+  view-transition-name: close-btn;
   margin-top: 0.2em;
 }
 ::view-transition-group(product-image),
-::view-transition-group(product-name) {
+::view-transition-group(product-name),
+::view-transition-group(close-btn) {
   animation-duration: 1s;
   animation-timing-function: cubic-bezier(1,-0.06,.14,.94);
+}
+::view-transition-new(product-price),
+::view-transition-new(product-desc),
+::view-transition-new(close-btn) {
+  opacity: 0;
+  animation: fade-in 0.4s ease-out;
+  animation-delay: 0.8s;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 `,
     js: `const product = document.getElementById('product');
