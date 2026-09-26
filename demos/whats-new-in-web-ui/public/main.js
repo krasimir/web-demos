@@ -229,6 +229,22 @@ function renderStage() {
       document.getElementById('demo-css').textContent = event.data.__setCss;
     }
   });
+  const cardMarkup = \`
+    <img class="product-image" src="/images/product.jpg" alt="Inter" />
+    <p class="product-name">FC Inter home match jersey 2025/26</p>
+  \`;
+
+  const detailMarkup = \`
+    <img class="product-image" src="/images/product.jpg" alt="Inter" />
+    <div class="product-info">
+      <p class="product-name">FC Inter home match jersey 2025/26</p>
+      <p class="product-price">€ 73,77</p>
+      <p class="product-desc">
+        Official home match jersey for FC Inter's 2025/26 season. Made with high-quality materials for comfort and performance on the pitch.
+      </p>
+      <button class="close-btn" id="close-btn">← Back</button>
+    </div>
+  \`;
 <\/script>
 ${htmlCode}
 <script>
