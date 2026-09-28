@@ -17,7 +17,7 @@ PID_FILE="$ROOT_DIR/.demo-pids"
 # Demo ports currently live in 3001-3004 (see demos/*/server.js). Widened
 # to leave headroom as more demos get added.
 PORT_RANGE_START=3000
-PORT_RANGE_END=3020
+PORT_RANGE_END=3040
 
 # 1. Kill recorded PIDs (and their process groups) from a normal start-all.sh run.
 if [ -f "$PID_FILE" ]; then
