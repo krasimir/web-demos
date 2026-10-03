@@ -105,6 +105,11 @@ let invulnTimer = 0;
 let hitFlashTimer = 0;
 let particles = [];
 
+const LIFE_BONUS_SCORE = 1000;
+const LIFE_BONUS_FRAMES = 110;
+let nextLifeBonus = LIFE_BONUS_SCORE;
+let lifeBonusTimer = 0;
+
 let prevSmiling = false;
 let jumpRequested = false;
 let jumpPower = 0;
@@ -184,6 +189,8 @@ function resetGame() {
   invulnTimer = 0;
   hitFlashTimer = 0;
   particles = [];
+  nextLifeBonus = LIFE_BONUS_SCORE;
+  lifeBonusTimer = 0;
   pickups = [];
   pickupSpawnTimer = 240;
   speedPenalty = 0;
@@ -383,7 +390,7 @@ function spawnPickup() {
 
   const pickup = { x: canvas.width, y, w, h, type, bobSeed: Math.random() * 10 };
   if (type === 'points') pickup.value = 50 + Math.floor(Math.random() * 51);
-  else if (type === 'slow') pickup.value = -(1 + Math.floor(Math.random() * 5));
+  else if (type === 'slow') pickup.value = -(1 + Math.floor(Math.random() * 3));
 
   pickups.push(pickup);
 }
@@ -535,6 +542,15 @@ function update() {
   particles = particles.filter((p) => p.life > 0);
 
   score += 1;
+
+  if (score >= nextLifeBonus) {
+    nextLifeBonus += LIFE_BONUS_SCORE;
+    if (lives < MAX_LIVES) {
+      lives += 1;
+      lifeBonusTimer = LIFE_BONUS_FRAMES;
+    }
+  }
+  if (lifeBonusTimer > 0) lifeBonusTimer -= 1;
 
   if (gameOver && score > highScore) {
     highScore = score;
@@ -1892,6 +1908,21 @@ function drawBranch(o) {
   }
 }
 
+function drawHeart(cx, cy, size, filled) {
+  const r = size * 0.28;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + size * 0.32);
+  ctx.bezierCurveTo(cx - size * 0.5, cy - size * 0.05, cx - r * 2, cy - size * 0.55, cx, cy - size * 0.18);
+  ctx.bezierCurveTo(cx + r * 2, cy - size * 0.55, cx + size * 0.5, cy - size * 0.05, cx, cy + size * 0.32);
+  ctx.closePath();
+  if (filled) {
+    ctx.fill();
+  } else {
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
 function drawParticles() {
   particles.forEach((p) => {
     ctx.save();
@@ -2072,16 +2103,73 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  ctx.fillStyle = '#20231f';
   ctx.font = '10px monospace';
   const scoreText = `Score: ${score}`;
-  ctx.fillText(scoreText, 6, 12);
+  const scoreW = ctx.measureText(scoreText).width;
+  const heartsW = MAX_LIVES * 12 + 2;
+  const panelX = 2;
+  const panelY = 2;
+  const panelW = 6 + scoreW + 8 + heartsW + 4;
+  const panelH = 15;
+  const panelR = 4;
 
-  const heartsX = 6 + ctx.measureText(scoreText).width + 8;
-  ctx.font = '11px sans-serif';
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(panelX + panelR, panelY);
+  ctx.arcTo(panelX + panelW, panelY, panelX + panelW, panelY + panelH, panelR);
+  ctx.arcTo(panelX + panelW, panelY + panelH, panelX, panelY + panelH, panelR);
+  ctx.arcTo(panelX, panelY + panelH, panelX, panelY, panelR);
+  ctx.arcTo(panelX, panelY, panelX + panelW, panelY, panelR);
+  ctx.closePath();
+  const panelGrad = ctx.createLinearGradient(panelX, panelY, panelX, panelY + panelH);
+  panelGrad.addColorStop(0, 'rgba(26, 24, 36, 0.72)');
+  panelGrad.addColorStop(1, 'rgba(12, 11, 18, 0.6)');
+  ctx.fillStyle = panelGrad;
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.stroke();
+  ctx.restore();
+
+  const panelMidY = panelY + panelH / 2;
+
+  // Center the score text on the panel using its actual glyph bounding box
+  // rather than font-baseline metrics, which render inconsistently across
+  // browsers and left the text looking vertically off.
+  const scoreMetrics = ctx.measureText(scoreText);
+  const scoreGlyphH = (scoreMetrics.actualBoundingBoxAscent ?? 7) + (scoreMetrics.actualBoundingBoxDescent ?? 0);
+  const scoreBaselineY = panelMidY + scoreGlyphH / 2 - (scoreMetrics.actualBoundingBoxDescent ?? 0);
+  ctx.fillStyle = '#f5f0e6';
+  ctx.fillText(scoreText, 6, scoreBaselineY);
+
+  // Hearts drawn as vector shapes (not a font glyph) so their visual center
+  // lines up exactly with the panel middle, independent of font rendering.
+  const heartsX = 6 + scoreW + 8;
   for (let i = 0; i < MAX_LIVES; i++) {
+    const hcx = heartsX + i * 12 + 4;
     ctx.fillStyle = i < lives ? '#e0455c' : 'rgba(255, 255, 255, 0.4)';
-    ctx.fillText(i < lives ? '♥' : '♡', heartsX + i * 12, 12);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    drawHeart(hcx, panelMidY, 9, i < lives);
+  }
+
+  if (lifeBonusTimer > 0) {
+    const t = lifeBonusTimer / LIFE_BONUS_FRAMES;
+    const riseT = Math.min(1, (LIFE_BONUS_FRAMES - lifeBonusTimer) / 20);
+    const alpha = t < 0.3 ? t / 0.3 : 1;
+    const by = 30 - riseT * 6;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillStyle = 'rgba(224, 69, 92, 0.5)';
+    ctx.fillText('+1 LIFE', canvas.width / 2 + 1, by + 1);
+    ctx.fillStyle = '#ff7b8f';
+    ctx.fillText('+1 LIFE', canvas.width / 2, by);
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = '#ffd3d9';
+    ctx.fillText('♥', canvas.width / 2, by + 16);
+    ctx.textAlign = 'left';
+    ctx.restore();
   }
 
   if (gameOver) {
