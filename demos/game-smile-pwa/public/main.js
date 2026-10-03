@@ -74,9 +74,8 @@ if ('serviceWorker' in navigator) {
 let charY = GROUND_Y - CHAR_H;
 let velocityY = 0;
 let jumping = false;
-
-const LAND_SQUASH_FRAMES = 10;
-let landSquashTimer = 0;
+let walkFrame = 0;
+let walkTimer = 0;
 
 let obstacles = [];
 let spawnTimer = 60;
@@ -174,11 +173,10 @@ function resetGame() {
   lives = MAX_LIVES;
   invulnTimer = 0;
   hitFlashTimer = 0;
-  landSquashTimer = 0;
   particles = [];
 }
 
-const EXPLOSION_COLORS = ['#c0432f', '#7a2318', '#200a06', '#e0735a'];
+const EXPLOSION_COLORS = ['#2e2440', '#c0392b', '#4a3a66', '#1a1512'];
 
 function spawnExplosion(cx, cy) {
   for (let i = 0; i < 14; i++) {
@@ -375,10 +373,8 @@ function update() {
   if (charY >= GROUND_Y - CHAR_H) {
     charY = GROUND_Y - CHAR_H;
     velocityY = 0;
-    if (jumping) landSquashTimer = LAND_SQUASH_FRAMES;
     jumping = false;
   }
-  if (landSquashTimer > 0) landSquashTimer -= 1;
 
   const squatNow = squatting && !jumping;
 
@@ -467,6 +463,14 @@ function update() {
   if (gameOver && score > highScore) {
     highScore = score;
     localStorage.setItem(HIGH_SCORE_KEY, String(highScore));
+  }
+
+  if (!jumping) {
+    walkTimer += 1;
+    if (walkTimer > 8) {
+      walkTimer = 0;
+      walkFrame = 1 - walkFrame;
+    }
   }
 }
 
@@ -748,162 +752,77 @@ function drawBackground() {
   }
 }
 
-const BLOB_COLOR = '#c0432f';
-const BLOB_SHADE = '#7a2318';
-const BLOB_INK = '#200a06';
+function drawSpiderLeg(attachX, attachY, dir, reach, spread, lift) {
+  const kneeX = attachX + dir * spread * 0.5;
+  const kneeY = attachY + reach * 0.45 - lift;
+  const footX = attachX + dir * spread;
+  const footY = attachY + reach;
 
-// A fixed irregular silhouette (generated once, not per-frame, so it
-// doesn't jitter) and a few hanging ooze drips - gives the blob a lumpy,
-// melting look instead of a clean circle.
-const BLOB_BUMPS = Array.from({ length: 11 }, (_, i) =>
-  i % 2 === 0 ? 0.82 + hashRand(i * 3.7) * 0.16 : 1.04 + hashRand(i * 3.7 + 40) * 0.26
-);
-const BLOB_DRIPS = [
-  { x: -0.5, len: 0.55 },
-  { x: 0.05, len: 0.85 },
-  { x: 0.55, len: 0.4 },
-];
+  ctx.beginPath();
+  ctx.moveTo(attachX, attachY);
+  ctx.lineTo(kneeX, kneeY);
+  ctx.lineTo(footX, footY);
+  ctx.stroke();
+}
 
 function drawCharacter() {
   const x = CHAR_X;
   const squatNow = squatting && !jumping;
   const y = squatNow ? GROUND_Y - SQUAT_H : charY;
-  const h = squatNow ? SQUAT_H : CHAR_H;
-  const cx = x + CHAR_W / 2;
+  const cx = x + 8;
+  const bodyColor = '#2e2440';
 
-  // Squash & stretch: wide+flat squatting, stretched while shooting up or
-  // falling fast, squashed again at the hang-time peak of a jump, plus a
-  // gentle breathing pulse at rest so the blob never looks fully static.
-  let scaleX = 1;
-  let scaleY = 1;
+  const tucked = jumping;
+  const reach = squatNow ? 4 : tucked ? 5 : 9;
+  const spread = squatNow ? 7 : tucked ? 2 : 5;
+  const legAttachY = squatNow ? y + 5 : y + 11;
+  const bodyCy = squatNow ? y + 4 : y + 10;
+  const headCy = squatNow ? y + 3 : y + 8;
+  const phase = walkFrame === 0 ? 1 : -1;
 
-  if (squatNow) {
-    scaleX = 1.35;
-    scaleY = 0.68;
-  } else if (jumping) {
-    const speedFactor = Math.min(1, Math.abs(velocityY) / 9);
-    if (Math.abs(velocityY) < 1.5) {
-      scaleX = 1.18;
-      scaleY = 0.85;
-    } else {
-      scaleY = 1 + speedFactor * 0.22;
-      scaleX = 1 - speedFactor * 0.14;
-    }
-  } else {
-    const breathe = Math.sin(score * 0.1) * 0.035;
-    scaleY = 1 + breathe;
-    scaleX = 1 - breathe;
-  }
-
-  if (landSquashTimer > 0) {
-    const t = landSquashTimer / LAND_SQUASH_FRAMES;
-    scaleX += 0.3 * t;
-    scaleY -= 0.22 * t;
-  }
-
-  const bodyW = CHAR_W * scaleX;
-  const bodyH = (h - 4) * scaleY;
-  const bodyCy = y + h - bodyH / 2 - 3;
-  const rx = bodyW / 2;
-  const ry = bodyH / 2;
-
-  // feet
-  ctx.fillStyle = BLOB_SHADE;
-  ctx.beginPath();
-  ctx.ellipse(cx - bodyW * 0.22, y + h - 2, 3 * scaleX, 2.2, 0, 0, Math.PI * 2);
-  ctx.ellipse(cx + bodyW * 0.22, y + h - 2, 3 * scaleX, 2.2, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // ooze drips hanging off the underside
-  ctx.fillStyle = BLOB_SHADE;
-  BLOB_DRIPS.forEach((d) => {
-    const dx = cx + d.x * rx;
-    const dripLen = d.len * ry * 0.7;
-    const baseY = bodyCy + ry * 0.75;
-    ctx.beginPath();
-    ctx.moveTo(dx - 1.4, baseY);
-    ctx.quadraticCurveTo(dx, baseY + dripLen * 0.6, dx, baseY + dripLen);
-    ctx.quadraticCurveTo(dx, baseY + dripLen * 0.6, dx + 1.4, baseY);
-    ctx.closePath();
-    ctx.fill();
-  });
-
-  // jagged, lumpy body instead of a clean circle
-  ctx.fillStyle = BLOB_COLOR;
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = OUTLINE;
-  ctx.beginPath();
-  BLOB_BUMPS.forEach((r, i) => {
-    const angle = (i / BLOB_BUMPS.length) * Math.PI * 2;
-    const px = cx + Math.cos(angle) * rx * r;
-    const py = bodyCy + Math.sin(angle) * ry * r;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
-  });
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // sickly mottled patches
-  ctx.fillStyle = 'rgba(32, 10, 6, 0.18)';
-  ctx.beginPath();
-  ctx.ellipse(cx + rx * 0.3, bodyCy + ry * 0.35, rx * 0.22, ry * 0.16, 0.4, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
-  ctx.beginPath();
-  ctx.ellipse(cx - bodyW * 0.18, bodyCy - bodyH * 0.24, bodyW * 0.16, bodyH * 0.12, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-
-  // heavy, asymmetric angry brows
-  const eyeY = bodyCy - bodyH * 0.06;
-  ctx.strokeStyle = BLOB_INK;
-  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 1.4;
   ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(cx - bodyW * 0.3, eyeY - bodyH * 0.26);
-  ctx.lineTo(cx - bodyW * 0.07, eyeY - bodyH * 0.1);
-  ctx.moveTo(cx + bodyW * 0.3, eyeY - bodyH * 0.28);
-  ctx.lineTo(cx + bodyW * 0.09, eyeY - bodyH * 0.14);
-  ctx.stroke();
 
-  // glowing, uneven, slit-pupil eyes
-  [
-    { ex: -0.17, ey: 0, er: 0.105 },
-    { ex: 0.2, ey: 0.03, er: 0.075 },
-  ].forEach(({ ex, ey, er }) => {
-    const exPos = cx + bodyW * ex;
-    const eyPos = eyeY + bodyH * ey;
-    const erAbs = bodyW * er;
+  const backXs = [cx - 6, cx - 3, cx];
+  const frontXs = [cx + 1, cx + 4, cx + 7];
 
-    ctx.fillStyle = 'rgba(255, 60, 40, 0.3)';
-    ctx.beginPath();
-    ctx.arc(exPos, eyPos, erAbs * 1.7, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#f2e3dc';
-    ctx.beginPath();
-    ctx.ellipse(exPos, eyPos, erAbs, bodyH * 0.13, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = BLOB_INK;
-    ctx.beginPath();
-    ctx.ellipse(exPos, eyPos, erAbs * 0.3, bodyH * 0.1, 0, 0, Math.PI * 2);
-    ctx.fill();
+  backXs.forEach((ax, i) => {
+    const lift = squatNow ? 0 : tucked ? 2 : (i % 2 === 0 ? phase : -phase) * 1.5;
+    drawSpiderLeg(ax, legAttachY, -1, reach, spread, lift);
+  });
+  frontXs.forEach((ax, i) => {
+    const lift = squatNow ? 0 : tucked ? 2 : (i % 2 === 0 ? -phase : phase) * 1.5;
+    drawSpiderLeg(ax, legAttachY, 1, reach, spread, lift);
   });
 
-  // jagged fanged mouth
-  const mouthY = bodyCy + bodyH * 0.3;
-  ctx.fillStyle = BLOB_INK;
+  // abdomen (squashed flat when squatting)
+  ctx.fillStyle = bodyColor;
   ctx.beginPath();
-  ctx.moveTo(cx - bodyW * 0.17, mouthY);
-  for (let i = 0; i <= 4; i++) {
-    const tx = cx - bodyW * 0.17 + bodyW * 0.34 * (i / 4);
-    const ty = mouthY + (i % 2 === 0 ? 3 : -1.5);
-    ctx.lineTo(tx, ty);
-  }
-  ctx.lineTo(cx + bodyW * 0.17, mouthY);
-  ctx.closePath();
+  ctx.ellipse(cx - 2, bodyCy, squatNow ? 6.5 : 5.5, squatNow ? 3 : 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // head
+  ctx.beginPath();
+  ctx.ellipse(cx + 4.5, headCy, squatNow ? 3.4 : 3.2, squatNow ? 2.2 : 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // eyes
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(cx + 5.3, headCy - 1, 1, 0, Math.PI * 2);
+  ctx.arc(cx + 6.3, headCy + 0.3, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#1a1512';
+  ctx.beginPath();
+  ctx.arc(cx + 5.3, headCy - 1, 0.5, 0, Math.PI * 2);
+  ctx.arc(cx + 6.3, headCy + 0.3, 0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // abdomen marking
+  ctx.fillStyle = '#c0392b';
+  ctx.beginPath();
+  ctx.arc(cx - 2, bodyCy, 1.3, 0, Math.PI * 2);
   ctx.fill();
 }
 
