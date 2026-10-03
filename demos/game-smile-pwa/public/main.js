@@ -42,7 +42,24 @@ resizeCanvas();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      // Check for a new version right away, and again whenever the app is
+      // brought back to the foreground (e.g. reopened from the home
+      // screen) so an installed PWA doesn't sit on a stale build.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+  });
+
+  // sw.js calls skipWaiting()/clients.claim() unconditionally, so once a
+  // new service worker takes over, reload to pick up the matching HTML/JS
+  // instead of leaving the old page running against a new cache.
+  let reloadedForUpdate = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloadedForUpdate) return;
+    reloadedForUpdate = true;
+    window.location.reload();
   });
 }
 
@@ -67,6 +84,9 @@ let bgNear = 0;
 let bgCloud = 0;
 
 const MONSTER_COLORS = ['#6fbf73', '#9b6fd6', '#d67f7f'];
+const SPARROW_COLORS = ['#5b8fd6', '#d6935b', '#8fbf6f'];
+const OUTLINE = 'rgba(20, 18, 14, 0.85)';
+const FLYER_TYPES = new Set(['sparrow', 'crow', 'dragon']);
 
 function smileScore(blendshapes) {
   const categories = blendshapes.categories;
@@ -92,27 +112,44 @@ function pickGroundType() {
   return 'monster';
 }
 
-function pickType() {
-  return Math.random() < 0.32 ? 'bird' : pickGroundType();
+function pickFlyerType() {
+  const r = Math.random();
+  if (r < 0.45) return 'sparrow';
+  if (r < 0.8) return 'crow';
+  return 'dragon';
 }
 
-function spawnObstacle() {
-  let type = pickType();
+function pickType() {
+  return Math.random() < 0.35 ? pickFlyerType() : pickGroundType();
+}
 
-  const recentBird = obstacles.some((o) => canvas.width - o.x < 70 && o.type === 'bird');
-  const recentGround = obstacles.some((o) => canvas.width - o.x < 70 && o.type !== 'bird');
-  if (recentBird && type !== 'bird') type = 'bird';
-  else if (recentGround && type === 'bird') type = pickGroundType();
-
-  if (type === 'bird') {
-    const h = 10 + Math.random() * 2;
-    const w = 16 + Math.random() * 4;
-    const gap = 2 + Math.random() * 3;
-    const y = GROUND_Y - CHAR_H - gap - h;
-    obstacles.push({ x: canvas.width, y, w, h, type, flapSeed: Math.random() * 10 });
-    return;
+function spawnFlyer(type) {
+  let h, w, gapRange, flapInterval;
+  if (type === 'sparrow') {
+    h = 8 + Math.random() * 3;
+    w = 13 + Math.random() * 4;
+    gapRange = [2, 4];
+    flapInterval = 5;
+  } else if (type === 'crow') {
+    h = 10 + Math.random() * 3;
+    w = 17 + Math.random() * 5;
+    gapRange = [3, 7];
+    flapInterval = 7;
+  } else {
+    h = 15 + Math.random() * 5;
+    w = 28 + Math.random() * 10;
+    gapRange = [6, 12];
+    flapInterval = 10;
   }
 
+  const gap = gapRange[0] + Math.random() * (gapRange[1] - gapRange[0]);
+  const y = GROUND_Y - CHAR_H - gap - h;
+  const color = type === 'sparrow' ? SPARROW_COLORS[Math.floor(Math.random() * SPARROW_COLORS.length)] : undefined;
+
+  obstacles.push({ x: canvas.width, y, w, h, type, color, flapSeed: Math.random() * 10, flapInterval });
+}
+
+function spawnGround(type) {
   if (type === 'rock') {
     const h = 12 + Math.random() * 14;
     const w = 14 + Math.random() * 10;
@@ -133,6 +170,24 @@ function spawnObstacle() {
   const w = 18 + Math.random() * 8;
   const color = MONSTER_COLORS[Math.floor(Math.random() * MONSTER_COLORS.length)];
   obstacles.push({ x: canvas.width, y: GROUND_Y - h, w, h, type, color, bobSeed: Math.random() * 10 });
+}
+
+function spawnObstacle() {
+  let type = pickType();
+  let isFlyer = FLYER_TYPES.has(type);
+
+  const recentFlyer = obstacles.some((o) => canvas.width - o.x < 70 && FLYER_TYPES.has(o.type));
+  const recentGround = obstacles.some((o) => canvas.width - o.x < 70 && !FLYER_TYPES.has(o.type));
+  if (recentFlyer && !isFlyer) {
+    type = pickFlyerType();
+    isFlyer = true;
+  } else if (recentGround && isFlyer) {
+    type = pickGroundType();
+    isFlyer = false;
+  }
+
+  if (isFlyer) spawnFlyer(type);
+  else spawnGround(type);
 }
 
 function update() {
@@ -199,8 +254,14 @@ function update() {
 function drawTiled(unitWidth, offset, drawUnit) {
   const startX = -(((offset % unitWidth) + unitWidth) % unitWidth);
   for (let x = startX; x < canvas.width + unitWidth; x += unitWidth) {
-    drawUnit(x);
+    const tileIndex = Math.round((x + offset) / unitWidth);
+    drawUnit(x, tileIndex);
   }
+}
+
+function hashRand(seed) {
+  const v = Math.sin(seed * 12.9898) * 43758.5453;
+  return v - Math.floor(v);
 }
 
 function drawSky() {
@@ -237,26 +298,67 @@ function drawHills() {
   });
 }
 
+function drawPineTree(x, r2, r3) {
+  const pineColor = r2 < 0.5 ? '#3f8f52' : '#2e6e3f';
+  const trunkH = 12 + r3 * 6;
+  const scale = 0.85 + r3 * 0.3;
+
+  ctx.fillStyle = '#6b4a30';
+  ctx.fillRect(x + 17, GROUND_Y - trunkH, 4, trunkH);
+
+  ctx.fillStyle = pineColor;
+  ctx.beginPath();
+  ctx.moveTo(x + 19, GROUND_Y - trunkH - 28 * scale);
+  ctx.lineTo(x + 19 - 12 * scale, GROUND_Y - trunkH - 4);
+  ctx.lineTo(x + 19 + 12 * scale, GROUND_Y - trunkH - 4);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(x + 19, GROUND_Y - trunkH - 20 * scale);
+  ctx.lineTo(x + 19 - 10 * scale, GROUND_Y - trunkH + 4);
+  ctx.lineTo(x + 19 + 10 * scale, GROUND_Y - trunkH + 4);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawRoundTree(x, r2, r3) {
+  const crownColor = r2 < 0.2 ? '#cf9a4a' : r2 < 0.6 ? '#5fa85f' : '#7cb86a';
+  const trunkH = 10 + r3 * 5;
+  const crownR = 11 + r3 * 4;
+
+  ctx.fillStyle = '#6b4a30';
+  ctx.fillRect(x + 18, GROUND_Y - trunkH, 3, trunkH);
+
+  ctx.fillStyle = crownColor;
+  ctx.beginPath();
+  ctx.arc(x + 19, GROUND_Y - trunkH - crownR * 0.6, crownR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + 19 - crownR * 0.6, GROUND_Y - trunkH - crownR * 0.3, crownR * 0.7, 0, Math.PI * 2);
+  ctx.arc(x + 19 + crownR * 0.6, GROUND_Y - trunkH - crownR * 0.3, crownR * 0.7, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawBush(x, r2) {
+  const bushColor = r2 < 0.5 ? '#4f9a56' : '#6bb062';
+  ctx.fillStyle = bushColor;
+  ctx.beginPath();
+  ctx.ellipse(x + 10, GROUND_Y - 6, 9, 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 22, GROUND_Y - 7, 10, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 30, GROUND_Y - 5, 7, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 function drawTrees() {
-  drawTiled(42, bgMid, (x) => {
-    const trunkH = 14;
-    ctx.fillStyle = '#6b4a30';
-    ctx.fillRect(x + 17, GROUND_Y - trunkH, 4, trunkH);
+  drawTiled(42, bgMid, (x, idx) => {
+    const r1 = hashRand(idx);
+    const r2 = hashRand(idx + 50);
+    const r3 = hashRand(idx + 150);
 
-    ctx.fillStyle = '#3f8f52';
-    ctx.beginPath();
-    ctx.moveTo(x + 19, GROUND_Y - trunkH - 28);
-    ctx.lineTo(x + 7, GROUND_Y - trunkH - 4);
-    ctx.lineTo(x + 31, GROUND_Y - trunkH - 4);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(x + 19, GROUND_Y - trunkH - 20);
-    ctx.lineTo(x + 9, GROUND_Y - trunkH + 4);
-    ctx.lineTo(x + 29, GROUND_Y - trunkH + 4);
-    ctx.closePath();
-    ctx.fill();
+    if (r1 < 0.45) drawPineTree(x, r2, r3);
+    else if (r1 < 0.8) drawRoundTree(x, r2, r3);
+    else drawBush(x, r2);
   });
 }
 
@@ -320,6 +422,9 @@ function drawRock(o) {
   });
   ctx.closePath();
   ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = OUTLINE;
+  ctx.stroke();
 
   ctx.fillStyle = '#b5b5b5';
   ctx.beginPath();
@@ -330,9 +435,13 @@ function drawRock(o) {
 function drawBin(o) {
   ctx.fillStyle = '#596268';
   ctx.fillRect(o.x + 1, o.y + 4, o.w - 2, o.h - 4);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = OUTLINE;
+  ctx.strokeRect(o.x + 1, o.y + 4, o.w - 2, o.h - 4);
 
   ctx.fillStyle = '#3f464b';
   ctx.fillRect(o.x, o.y, o.w, 4);
+  ctx.strokeRect(o.x, o.y, o.w, 4);
 
   ctx.fillStyle = '#75808a';
   ctx.fillRect(o.x + 4, o.y + 8, 2, o.h - 12);
@@ -348,6 +457,9 @@ function drawMonster(o, frame) {
   ctx.beginPath();
   ctx.ellipse(x + o.w / 2, y + o.h / 2, o.w / 2, o.h / 2, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = OUTLINE;
+  ctx.stroke();
 
   ctx.fillStyle = o.color;
   for (let i = 0; i < 3; i++) {
@@ -376,47 +488,134 @@ function drawMonster(o, frame) {
   ctx.fillRect(x + o.w * 0.3, y + o.h * 0.68, o.w * 0.4, 2);
 }
 
-function drawBird(o, frame) {
-  const up = Math.floor((frame + o.flapSeed) / 6) % 2 === 0;
+function fillStroke() {
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = OUTLINE;
+  ctx.stroke();
+}
+
+function drawWingBird(o, frame, bodyColor, beakColor) {
+  const up = Math.floor((frame + o.flapSeed) / o.flapInterval) % 2 === 0;
   const cx = o.x + o.w / 2;
   const cy = o.y + o.h / 2;
-
-  ctx.fillStyle = '#2f2b28';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, o.w * 0.3, o.h * 0.38, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   ctx.beginPath();
   if (up) {
     ctx.moveTo(cx - o.w * 0.15, cy);
     ctx.lineTo(cx - o.w * 0.55, cy - o.h * 0.6);
     ctx.lineTo(cx - o.w * 0.1, cy - o.h * 0.1);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(cx + o.w * 0.15, cy);
-    ctx.lineTo(cx + o.w * 0.55, cy - o.h * 0.6);
-    ctx.lineTo(cx + o.w * 0.1, cy - o.h * 0.1);
   } else {
     ctx.moveTo(cx - o.w * 0.15, cy);
     ctx.lineTo(cx - o.w * 0.55, cy + o.h * 0.5);
     ctx.lineTo(cx - o.w * 0.1, cy + o.h * 0.1);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
+  }
+  ctx.closePath();
+  ctx.fillStyle = bodyColor;
+  fillStroke();
+
+  ctx.beginPath();
+  if (up) {
+    ctx.moveTo(cx + o.w * 0.15, cy);
+    ctx.lineTo(cx + o.w * 0.55, cy - o.h * 0.6);
+    ctx.lineTo(cx + o.w * 0.1, cy - o.h * 0.1);
+  } else {
     ctx.moveTo(cx + o.w * 0.15, cy);
     ctx.lineTo(cx + o.w * 0.55, cy + o.h * 0.5);
     ctx.lineTo(cx + o.w * 0.1, cy + o.h * 0.1);
   }
   ctx.closePath();
-  ctx.fill();
+  ctx.fillStyle = bodyColor;
+  fillStroke();
 
-  ctx.fillStyle = '#e8963a';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, o.w * 0.3, o.h * 0.38, 0, 0, Math.PI * 2);
+  ctx.fillStyle = bodyColor;
+  fillStroke();
+
+  ctx.fillStyle = beakColor;
   ctx.beginPath();
   ctx.moveTo(cx + o.w * 0.3, cy);
-  ctx.lineTo(cx + o.w * 0.45, cy + 1.5);
+  ctx.lineTo(cx + o.w * 0.48, cy + 1.5);
   ctx.lineTo(cx + o.w * 0.3, cy + 3);
   ctx.closePath();
+  ctx.fill();
+}
+
+function drawSparrow(o, frame) {
+  drawWingBird(o, frame, o.color || '#5b8fd6', '#e8963a');
+}
+
+function drawCrow(o, frame) {
+  drawWingBird(o, frame, '#2b2a28', '#5a5a5a');
+}
+
+function drawDragon(o, frame) {
+  const up = Math.floor((frame + o.flapSeed) / o.flapInterval) % 2 === 0;
+  const cx = o.x + o.w / 2;
+  const cy = o.y + o.h / 2;
+  const bodyColor = '#4a9b5e';
+  const wingColor = '#2f6e42';
+
+  ctx.beginPath();
+  const wingY = up ? cy - o.h * 0.75 : cy + o.h * 0.3;
+  ctx.moveTo(cx - o.w * 0.1, cy - o.h * 0.1);
+  ctx.lineTo(cx - o.w * 0.5, wingY);
+  ctx.lineTo(cx - o.w * 0.35, cy + o.h * 0.1);
+  ctx.lineTo(cx - o.w * 0.15, cy + o.h * 0.15);
+  ctx.closePath();
+  ctx.fillStyle = wingColor;
+  fillStroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx + o.w * 0.1, cy - o.h * 0.1);
+  ctx.lineTo(cx + o.w * 0.5, wingY);
+  ctx.lineTo(cx + o.w * 0.35, cy + o.h * 0.1);
+  ctx.lineTo(cx + o.w * 0.15, cy + o.h * 0.15);
+  ctx.closePath();
+  ctx.fillStyle = wingColor;
+  fillStroke();
+
+  // tail
+  ctx.beginPath();
+  ctx.moveTo(cx - o.w * 0.35, cy + o.h * 0.1);
+  ctx.lineTo(cx - o.w * 0.55, cy + o.h * 0.05);
+  ctx.lineTo(cx - o.w * 0.35, cy + o.h * 0.3);
+  ctx.closePath();
+  ctx.fillStyle = bodyColor;
+  fillStroke();
+
+  // body
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, o.w * 0.3, o.h * 0.3, 0, 0, Math.PI * 2);
+  ctx.fillStyle = bodyColor;
+  fillStroke();
+
+  // underbelly
+  ctx.fillStyle = '#d67a5b';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + o.h * 0.12, o.w * 0.2, o.h * 0.14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // head
+  ctx.beginPath();
+  ctx.ellipse(cx + o.w * 0.34, cy - o.h * 0.05, o.w * 0.14, o.h * 0.2, 0, 0, Math.PI * 2);
+  ctx.fillStyle = bodyColor;
+  fillStroke();
+
+  // horn
+  ctx.beginPath();
+  ctx.moveTo(cx + o.w * 0.3, cy - o.h * 0.22);
+  ctx.lineTo(cx + o.w * 0.36, cy - o.h * 0.4);
+  ctx.lineTo(cx + o.w * 0.4, cy - o.h * 0.2);
+  ctx.closePath();
+  ctx.fillStyle = '#e8d6a0';
+  fillStroke();
+
+  // eye
+  ctx.fillStyle = '#20231f';
+  ctx.beginPath();
+  ctx.arc(cx + o.w * 0.4, cy - o.h * 0.08, 1.3, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -424,7 +623,9 @@ function drawObstacle(o, frame) {
   if (o.type === 'rock') drawRock(o);
   else if (o.type === 'bin') drawBin(o);
   else if (o.type === 'monster') drawMonster(o, frame);
-  else if (o.type === 'bird') drawBird(o, frame);
+  else if (o.type === 'sparrow') drawSparrow(o, frame);
+  else if (o.type === 'crow') drawCrow(o, frame);
+  else if (o.type === 'dragon') drawDragon(o, frame);
 }
 
 function draw() {
@@ -472,7 +673,7 @@ async function initFaceLandmarker() {
     await startCamera();
     statusEl.textContent = 'Loading smile detector...';
     const faceLandmarker = await initFaceLandmarker();
-    statusEl.textContent = 'Smile to jump • stay still under birds 🐦';
+    statusEl.textContent = 'Smile to jump • stay still under birds & dragons 🐦🐉';
     setTimeout(() => {
       statusEl.textContent = '';
     }, 4500);
