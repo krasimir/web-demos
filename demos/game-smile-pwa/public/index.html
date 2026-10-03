@@ -69,11 +69,17 @@
     object-fit: cover;
   }
 
+  .meter-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
   .smile-bar {
     width: 64px;
-    height: 10px;
+    height: 8px;
     background: #444;
-    border-radius: 5px;
+    border-radius: 4px;
     overflow: hidden;
   }
   .smile-bar-fill {
@@ -81,6 +87,15 @@
     width: 0%;
     background: #4caf50;
     transition: width 0.05s linear;
+  }
+  .tilt-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #e67e22;
+    transition: width 0.05s linear, background-color 0.1s linear;
+  }
+  .tilt-bar-fill.active {
+    background: #ff5252;
   }
 
   #status {
@@ -159,7 +174,10 @@
 
   <div class="hud">
     <video id="camera" autoplay playsinline muted></video>
-    <div class="smile-bar"><div id="smile-bar-fill" class="smile-bar-fill"></div></div>
+    <div class="meter-col">
+      <div class="smile-bar"><div id="smile-bar-fill" class="smile-bar-fill"></div></div>
+      <div class="smile-bar"><div id="tilt-bar-fill" class="tilt-bar-fill"></div></div>
+    </div>
   </div>
 
   <div id="status"></div>

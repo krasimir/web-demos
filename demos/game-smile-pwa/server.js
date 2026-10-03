@@ -19,7 +19,7 @@ const indexHtml = indexTemplate
   .replace('src="install-prompt.js"', `src="install-prompt.js?v=${BUILD_ID}"`)
   .replace('href="manifest.webmanifest"', `href="manifest.webmanifest?v=${BUILD_ID}"`);
 
-const swJs = swTemplate.replace('__BUILD_ID__', BUILD_ID);
+const swJs = swTemplate.replaceAll('__BUILD_ID__', BUILD_ID);
 
 app.get(['/', '/index.html'], (req, res) => {
   res.set('Cache-Control', 'no-cache');

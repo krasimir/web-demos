@@ -4,6 +4,10 @@ import {
 } from './vendor/tasks-vision/vision_bundle.mjs';
 
 const SMILE_THRESHOLD = 0.35;
+const NOSE_LANDMARK = 1;
+const TILT_ENTER_DELTA = 0.045;
+const TILT_EXIT_DELTA = 0.03;
+const TILT_BASELINE_EMA = 0.02;
 const MIN_JUMP = 6;
 const MAX_JUMP = 14;
 const GRAVITY = 0.5;
@@ -11,6 +15,7 @@ const GROUND_Y = 150;
 const CHAR_X = 40;
 const CHAR_W = 16;
 const CHAR_H = 20;
+const SQUAT_H = 10;
 const BASE_SPEED = 1.5;
 const MAX_SPEED = 6;
 const SPEED_RAMP = 0.0015;
@@ -19,6 +24,7 @@ const video = document.getElementById('camera');
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const smileBarFill = document.getElementById('smile-bar-fill');
+const tiltBarFill = document.getElementById('tilt-bar-fill');
 const statusEl = document.getElementById('status');
 
 const GAME_ASPECT = canvas.width / canvas.height;
@@ -53,11 +59,13 @@ if ('serviceWorker' in navigator) {
   });
 
   // sw.js calls skipWaiting()/clients.claim() unconditionally, so once a
-  // new service worker takes over, reload to pick up the matching HTML/JS
-  // instead of leaving the old page running against a new cache.
+  // new service worker takes over an already-controlled page, reload to
+  // pick up the matching HTML/JS. The very first controllerchange (fresh
+  // install, no prior controller) is not an update, so it's ignored.
+  const hadController = !!navigator.serviceWorker.controller;
   let reloadedForUpdate = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (reloadedForUpdate) return;
+    if (!hadController || reloadedForUpdate) return;
     reloadedForUpdate = true;
     window.location.reload();
   });
@@ -73,20 +81,27 @@ let obstacles = [];
 let spawnTimer = 60;
 let score = 0;
 let gameOver = false;
+let gameOverTimer = 0;
+
+const RESTART_DELAY = 60;
+const HIGH_SCORE_KEY = 'smileJumpHighScore';
+let highScore = Number(localStorage.getItem(HIGH_SCORE_KEY)) || 0;
 
 let prevSmiling = false;
 let jumpRequested = false;
 let jumpPower = 0;
+let squatting = false;
 
 let bgFar = 0;
 let bgMid = 0;
 let bgNear = 0;
 let bgCloud = 0;
+let dayT = 0;
 
-const MONSTER_COLORS = ['#6fbf73', '#9b6fd6', '#d67f7f'];
+const MONSTER_COLORS = ['#3a2545', '#2b3a2e', '#4a1f23'];
 const SPARROW_COLORS = ['#5b8fd6', '#d6935b', '#8fbf6f'];
 const OUTLINE = 'rgba(20, 18, 14, 0.85)';
-const FLYER_TYPES = new Set(['sparrow', 'crow', 'dragon']);
+const NO_JUMP_TYPES = new Set(['sparrow', 'crow', 'dragon', 'branch']);
 
 function smileScore(blendshapes) {
   const categories = blendshapes.categories;
@@ -95,10 +110,39 @@ function smileScore(blendshapes) {
   return (left + right) / 2;
 }
 
+let noseBaselineY = null;
+
+// Tracks the nose tip's vertical position in the video frame (y grows
+// downward) against a slow-moving baseline of "neutral" head position, so
+// it auto-calibrates to however the phone is propped up. Tilting/ducking
+// the head down moves the nose down in frame relative to that baseline;
+// crossing the enter threshold starts a squat, dropping back under the
+// (lower) exit threshold ends it, which avoids flicker right at the edge.
+function updateTilt(landmarks) {
+  if (!landmarks) {
+    squatting = false;
+    return 0;
+  }
+
+  const noseY = landmarks[NOSE_LANDMARK].y;
+  if (noseBaselineY === null) noseBaselineY = noseY;
+  const delta = noseY - noseBaselineY;
+
+  if (!squatting && delta > TILT_ENTER_DELTA) squatting = true;
+  else if (squatting && delta < TILT_EXIT_DELTA) squatting = false;
+
+  if (!squatting) {
+    noseBaselineY += (noseY - noseBaselineY) * TILT_BASELINE_EMA;
+  }
+
+  return delta;
+}
+
 function resetGame() {
   charY = GROUND_Y - CHAR_H;
   velocityY = 0;
   jumping = false;
+  squatting = false;
   obstacles = [];
   spawnTimer = 60;
   score = 0;
@@ -119,8 +163,11 @@ function pickFlyerType() {
   return 'dragon';
 }
 
-function pickType() {
-  return Math.random() < 0.35 ? pickFlyerType() : pickGroundType();
+function pickCategory() {
+  const r = Math.random();
+  if (r < 0.5) return 'ground';
+  if (r < 0.78) return 'flyer';
+  return 'duck';
 }
 
 function spawnFlyer(type) {
@@ -169,25 +216,35 @@ function spawnGround(type) {
   const h = 22 + Math.random() * 12;
   const w = 18 + Math.random() * 8;
   const color = MONSTER_COLORS[Math.floor(Math.random() * MONSTER_COLORS.length)];
-  obstacles.push({ x: canvas.width, y: GROUND_Y - h, w, h, type, color, bobSeed: Math.random() * 10 });
+  const spikes = Array.from({ length: 10 }, (_, i) =>
+    i % 2 === 0 ? 0.6 + Math.random() * 0.25 : 1.05 + Math.random() * 0.3
+  );
+  obstacles.push({ x: canvas.width, y: GROUND_Y - h, w, h, type, color, bobSeed: Math.random() * 10, spikes });
+}
+
+function spawnDuck() {
+  // A long hanging branch: you must stay squatted (blink) for the whole
+  // time it crosses, not just a single frame.
+  const h = 8 + Math.random() * 6;
+  const w = 50 + Math.random() * 30;
+  const bottom = 136;
+  obstacles.push({ x: canvas.width, y: bottom - h, w, h, type: 'branch' });
 }
 
 function spawnObstacle() {
-  let type = pickType();
-  let isFlyer = FLYER_TYPES.has(type);
+  let category = pickCategory();
 
-  const recentFlyer = obstacles.some((o) => canvas.width - o.x < 70 && FLYER_TYPES.has(o.type));
-  const recentGround = obstacles.some((o) => canvas.width - o.x < 70 && !FLYER_TYPES.has(o.type));
-  if (recentFlyer && !isFlyer) {
-    type = pickFlyerType();
-    isFlyer = true;
-  } else if (recentGround && isFlyer) {
-    type = pickGroundType();
-    isFlyer = false;
+  const recentNoJump = obstacles.some((o) => canvas.width - o.x < 90 && NO_JUMP_TYPES.has(o.type));
+  const recentGround = obstacles.some((o) => canvas.width - o.x < 90 && !NO_JUMP_TYPES.has(o.type));
+  if (category === 'ground' && recentNoJump) {
+    category = Math.random() < 0.6 ? 'flyer' : 'duck';
+  } else if (category !== 'ground' && recentGround) {
+    category = 'ground';
   }
 
-  if (isFlyer) spawnFlyer(type);
-  else spawnGround(type);
+  if (category === 'ground') spawnGround(pickGroundType());
+  else if (category === 'flyer') spawnFlyer(pickFlyerType());
+  else spawnDuck();
 }
 
 function update() {
@@ -197,7 +254,9 @@ function update() {
     return;
   }
 
-  if (jumpRequested && !jumping) {
+  const squatNow = squatting && !jumping;
+
+  if (jumpRequested && !jumping && !squatNow) {
     velocityY = -(MIN_JUMP + jumpPower * (MAX_JUMP - MIN_JUMP));
     jumping = true;
   }
@@ -212,6 +271,7 @@ function update() {
   }
 
   const speed = Math.min(MAX_SPEED, BASE_SPEED + score * SPEED_RAMP);
+  dayT = Math.min(1, Math.max(0, (speed - BASE_SPEED) / (MAX_SPEED - BASE_SPEED)));
 
   bgFar += speed * 0.15;
   bgMid += speed * 0.4;
@@ -228,7 +288,9 @@ function update() {
   obstacles.forEach((o) => (o.x -= speed));
   obstacles = obstacles.filter((o) => o.x + o.w > 0);
 
-  const charBox = { x: CHAR_X, y: charY, w: CHAR_W, h: CHAR_H };
+  const charBox = squatNow
+    ? { x: CHAR_X, y: GROUND_Y - SQUAT_H, w: CHAR_W, h: SQUAT_H }
+    : { x: CHAR_X, y: charY, w: CHAR_W, h: CHAR_H };
   for (const o of obstacles) {
     if (
       charBox.x < o.x + o.w &&
@@ -264,20 +326,61 @@ function hashRand(seed) {
   return v - Math.floor(v);
 }
 
+function lerpColor(hexA, hexB, t) {
+  const a = parseInt(hexA.slice(1), 16);
+  const b = parseInt(hexB.slice(1), 16);
+  const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+  const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return `rgb(${r}, ${g}, ${bl})`;
+}
+
+const STARS = Array.from({ length: 18 }, (_, i) => ({
+  x: hashRand(i) * 320,
+  y: hashRand(i + 90) * (GROUND_Y - 20),
+  r: 0.6 + hashRand(i + 180) * 0.8,
+}));
+
 function drawSky() {
+  const topColor = lerpColor('#79c3ee', '#111b33', dayT);
+  const bottomColor = lerpColor('#d9f1df', '#2c3350', dayT);
   const grad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-  grad.addColorStop(0, '#79c3ee');
-  grad.addColorStop(1, '#d9f1df');
+  grad.addColorStop(0, topColor);
+  grad.addColorStop(1, bottomColor);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, GROUND_Y);
 
-  ctx.fillStyle = 'rgba(255, 247, 194, 0.9)';
-  ctx.beginPath();
-  ctx.arc(canvas.width - 36, 30, 14, 0, Math.PI * 2);
-  ctx.fill();
+  if (dayT < 0.97) {
+    ctx.globalAlpha = 1 - dayT;
+    ctx.fillStyle = 'rgba(255, 247, 194, 0.9)';
+    ctx.beginPath();
+    ctx.arc(canvas.width - 36, 30, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  if (dayT > 0.03) {
+    ctx.globalAlpha = dayT;
+    STARS.forEach((s) => {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(s.x, s.y, s.r, s.r);
+    });
+
+    ctx.fillStyle = '#eef0e0';
+    ctx.beginPath();
+    ctx.arc(canvas.width - 36, 28, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(20, 24, 48, 0.9)';
+    ctx.beginPath();
+    ctx.arc(canvas.width - 31, 24, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
 
   drawTiled(140, bgCloud, (x) => {
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillStyle = dayT < 0.5 ? 'rgba(255,255,255,0.85)' : 'rgba(120,130,160,0.5)';
     ctx.beginPath();
     ctx.ellipse(x + 30, 28, 16, 7, 0, 0, Math.PI * 2);
     ctx.ellipse(x + 44, 24, 11, 6, 0, 0, Math.PI * 2);
@@ -287,8 +390,9 @@ function drawSky() {
 }
 
 function drawHills() {
+  const hillColor = lerpColor('#9fd3a6', '#1f2b3a', dayT);
   drawTiled(90, bgFar, (x) => {
-    ctx.fillStyle = '#9fd3a6';
+    ctx.fillStyle = hillColor;
     ctx.beginPath();
     ctx.moveTo(x, GROUND_Y);
     ctx.quadraticCurveTo(x + 22, GROUND_Y - 44, x + 45, GROUND_Y);
@@ -381,29 +485,95 @@ function drawBackground() {
   drawHills();
   drawTrees();
   drawGround();
+
+  if (dayT > 0.01) {
+    ctx.fillStyle = `rgba(8, 10, 28, ${0.45 * dayT})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function drawSpiderLeg(attachX, attachY, dir, reach, spread, lift) {
+  const kneeX = attachX + dir * spread * 0.5;
+  const kneeY = attachY + reach * 0.45 - lift;
+  const footX = attachX + dir * spread;
+  const footY = attachY + reach;
+
+  ctx.beginPath();
+  ctx.moveTo(attachX, attachY);
+  ctx.lineTo(kneeX, kneeY);
+  ctx.lineTo(footX, footY);
+  ctx.stroke();
 }
 
 function drawCharacter() {
   const x = CHAR_X;
-  const y = charY;
+  const squatNow = squatting && !jumping;
+  const y = squatNow ? GROUND_Y - SQUAT_H : charY;
+  const cx = x + 8;
+  const bodyColor = '#2e2440';
 
-  ctx.fillStyle = '#4a3324';
-  ctx.fillRect(x, y, CHAR_W, 12);
+  const tucked = jumping;
+  const reach = squatNow ? 4 : tucked ? 5 : 9;
+  const spread = squatNow ? 7 : tucked ? 2 : 5;
+  const legAttachY = squatNow ? y + 5 : y + 11;
+  const bodyCy = squatNow ? y + 4 : y + 10;
+  const headCy = squatNow ? y + 3 : y + 8;
+  const phase = walkFrame === 0 ? 1 : -1;
 
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(x + CHAR_W - 6, y + 3, 2, 2);
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 1.4;
+  ctx.lineCap = 'round';
 
-  ctx.fillStyle = '#2f2118';
-  if (jumping) {
-    ctx.fillRect(x + 1, y + 12, 5, 8);
-    ctx.fillRect(x + CHAR_W - 6, y + 12, 5, 8);
-  } else if (walkFrame === 0) {
-    ctx.fillRect(x, y + 12, 5, 8);
-    ctx.fillRect(x + CHAR_W - 6, y + 12, 5, 6);
+  const backXs = [cx - 6, cx - 3, cx];
+  const frontXs = [cx + 1, cx + 4, cx + 7];
+
+  backXs.forEach((ax, i) => {
+    const lift = squatNow ? 0 : tucked ? 2 : (i % 2 === 0 ? phase : -phase) * 1.5;
+    drawSpiderLeg(ax, legAttachY, -1, reach, spread, lift);
+  });
+  frontXs.forEach((ax, i) => {
+    const lift = squatNow ? 0 : tucked ? 2 : (i % 2 === 0 ? -phase : phase) * 1.5;
+    drawSpiderLeg(ax, legAttachY, 1, reach, spread, lift);
+  });
+
+  // abdomen (squashed flat when squatting)
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(cx - 2, bodyCy, squatNow ? 6.5 : 5.5, squatNow ? 3 : 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // head
+  ctx.beginPath();
+  ctx.ellipse(cx + 4.5, headCy, squatNow ? 3.4 : 3.2, squatNow ? 2.2 : 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (squatNow) {
+    // closed/squinting eyes while blinking
+    ctx.strokeStyle = '#1a1512';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(cx + 4.3, headCy - 0.5);
+    ctx.lineTo(cx + 6.3, headCy - 0.5);
+    ctx.stroke();
   } else {
-    ctx.fillRect(x, y + 12, 5, 6);
-    ctx.fillRect(x + CHAR_W - 6, y + 12, 5, 8);
+    // eyes
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx + 5.3, headCy - 1, 1, 0, Math.PI * 2);
+    ctx.arc(cx + 6.3, headCy + 0.3, 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1a1512';
+    ctx.beginPath();
+    ctx.arc(cx + 5.3, headCy - 1, 0.5, 0, Math.PI * 2);
+    ctx.arc(cx + 6.3, headCy + 0.3, 0.5, 0, Math.PI * 2);
+    ctx.fill();
   }
+
+  // abdomen marking
+  ctx.fillStyle = '#c0392b';
+  ctx.beginPath();
+  ctx.arc(cx - 2, bodyCy, 1.3, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawRock(o) {
@@ -450,42 +620,79 @@ function drawBin(o) {
 
 function drawMonster(o, frame) {
   const bob = Math.sin((frame + o.bobSeed) * 0.2) * 1.2;
-  const x = o.x;
+  const twitch = Math.sin((frame + o.bobSeed) * 1.7) * 0.5;
+  const x = o.x + twitch;
   const y = o.y + bob;
+  const cx = x + o.w / 2;
+  const cy = y + o.h / 2;
+  const rx = o.w / 2;
+  const ry = o.h / 2;
 
+  // jagged, irregular silhouette instead of a smooth blob
   ctx.fillStyle = o.color;
   ctx.beginPath();
-  ctx.ellipse(x + o.w / 2, y + o.h / 2, o.w / 2, o.h / 2, 0, 0, Math.PI * 2);
+  o.spikes.forEach((r, i) => {
+    const angle = (i / o.spikes.length) * Math.PI * 2;
+    const px = cx + Math.cos(angle) * rx * r;
+    const py = cy + Math.sin(angle) * ry * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  });
+  ctx.closePath();
   ctx.fill();
   ctx.lineWidth = 1;
   ctx.strokeStyle = OUTLINE;
   ctx.stroke();
 
-  ctx.fillStyle = o.color;
-  for (let i = 0; i < 3; i++) {
-    const sx = x + 4 + i * (o.w - 8) / 2;
+  // glowing, asymmetric slit eyes
+  const eyeY = cy - o.h * 0.1;
+  [
+    { ex: cx - o.w * 0.2, er: 3.4 },
+    { ex: cx + o.w * 0.26, er: 2.3 },
+  ].forEach(({ ex, er }) => {
+    ctx.fillStyle = 'rgba(255, 40, 40, 0.35)';
     ctx.beginPath();
-    ctx.moveTo(sx, y + 2);
-    ctx.lineTo(sx + 3, y - 5);
-    ctx.lineTo(sx + 6, y + 2);
-    ctx.closePath();
+    ctx.arc(ex, eyeY, er * 1.8, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.fillStyle = '#e8d8d8';
+    ctx.beginPath();
+    ctx.arc(ex, eyeY, er, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#1a0a0a';
+    ctx.beginPath();
+    ctx.ellipse(ex, eyeY, er * 0.25, er * 0.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // jagged fanged maw
+  const mouthY = cy + o.h * 0.28;
+  ctx.fillStyle = '#140808';
+  ctx.beginPath();
+  ctx.moveTo(cx - o.w * 0.24, mouthY);
+  for (let i = 0; i <= 4; i++) {
+    const tx = cx - o.w * 0.24 + (o.w * 0.48) * (i / 4);
+    const ty = mouthY + (i % 2 === 0 ? 3 : -1.5);
+    ctx.lineTo(tx, ty);
   }
-
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(x + o.w * 0.35, y + o.h * 0.45, 3, 0, Math.PI * 2);
-  ctx.arc(x + o.w * 0.65, y + o.h * 0.45, 3, 0, Math.PI * 2);
+  ctx.lineTo(cx + o.w * 0.24, mouthY);
+  ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = '#20231f';
+  ctx.fillStyle = '#eee';
   ctx.beginPath();
-  ctx.arc(x + o.w * 0.35, y + o.h * 0.45, 1.3, 0, Math.PI * 2);
-  ctx.arc(x + o.w * 0.65, y + o.h * 0.45, 1.3, 0, Math.PI * 2);
+  ctx.moveTo(cx - o.w * 0.15, mouthY);
+  ctx.lineTo(cx - o.w * 0.1, mouthY + 5);
+  ctx.lineTo(cx - o.w * 0.05, mouthY);
+  ctx.closePath();
   ctx.fill();
-
-  ctx.fillStyle = '#20231f';
-  ctx.fillRect(x + o.w * 0.3, y + o.h * 0.68, o.w * 0.4, 2);
+  ctx.beginPath();
+  ctx.moveTo(cx + o.w * 0.05, mouthY);
+  ctx.lineTo(cx + o.w * 0.1, mouthY + 5);
+  ctx.lineTo(cx + o.w * 0.15, mouthY);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function fillStroke() {
@@ -619,6 +826,44 @@ function drawDragon(o, frame) {
   ctx.fill();
 }
 
+function drawBranch(o) {
+  // thorny hanging branch, anchored by vines off the top of the screen
+  ctx.strokeStyle = '#3c2a1a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(o.x + 4, o.y);
+  ctx.lineTo(o.x + 4, 0);
+  ctx.moveTo(o.x + o.w - 4, o.y);
+  ctx.lineTo(o.x + o.w - 4, 0);
+  ctx.stroke();
+
+  ctx.fillStyle = '#5a3c26';
+  ctx.fillRect(o.x, o.y, o.w, o.h);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = OUTLINE;
+  ctx.strokeRect(o.x, o.y, o.w, o.h);
+
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < Math.floor(o.w / 10); i++) {
+    const lx = o.x + i * 10;
+    ctx.beginPath();
+    ctx.moveTo(lx, o.y + 1);
+    ctx.lineTo(lx, o.y + o.h - 1);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#3c2a1a';
+  for (let tx = o.x + 4; tx < o.x + o.w - 4; tx += 9) {
+    ctx.beginPath();
+    ctx.moveTo(tx, o.y + o.h);
+    ctx.lineTo(tx + 3, o.y + o.h + 5);
+    ctx.lineTo(tx + 6, o.y + o.h);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
 function drawObstacle(o, frame) {
   if (o.type === 'rock') drawRock(o);
   else if (o.type === 'bin') drawBin(o);
@@ -626,6 +871,7 @@ function drawObstacle(o, frame) {
   else if (o.type === 'sparrow') drawSparrow(o, frame);
   else if (o.type === 'crow') drawCrow(o, frame);
   else if (o.type === 'dragon') drawDragon(o, frame);
+  else if (o.type === 'branch') drawBranch(o);
 }
 
 function draw() {
@@ -673,7 +919,7 @@ async function initFaceLandmarker() {
     await startCamera();
     statusEl.textContent = 'Loading smile detector...';
     const faceLandmarker = await initFaceLandmarker();
-    statusEl.textContent = 'Smile to jump • stay still under birds & dragons 🐦🐉';
+    statusEl.textContent = 'Smile to jump • stay still under birds & dragons 🐦🐉 • tilt your head down to squat under branches';
     setTimeout(() => {
       statusEl.textContent = '';
     }, 4500);
@@ -691,6 +937,11 @@ async function initFaceLandmarker() {
           jumpPower = score;
         }
         prevSmiling = isSmilingNow;
+
+        const landmarks = result.faceLandmarks[0];
+        const tiltDelta = updateTilt(landmarks);
+        tiltBarFill.style.width = `${Math.max(0, Math.min(100, Math.round((tiltDelta / TILT_ENTER_DELTA) * 100)))}%`;
+        tiltBarFill.classList.toggle('active', squatting);
       }
 
       update();
