@@ -83,6 +83,16 @@ let score = 0;
 let gameOver = false;
 let gameOverTimer = 0;
 
+let pickups = [];
+let pickupSpawnTimer = 240;
+let speedPenalty = 0;
+
+const SHIELD_FRAMES = 180;
+let shieldTimer = 0;
+const SPEED_PENALTY_DECAY = 0.01;
+const MAX_SPEED_PENALTY = 8;
+const MIN_SPEED = 0.6;
+
 const RESTART_DELAY = 60;
 const HIGH_SCORE_KEY = 'smileJumpHighScore';
 let highScore = Number(localStorage.getItem(HIGH_SCORE_KEY)) || 0;
@@ -174,26 +184,37 @@ function resetGame() {
   invulnTimer = 0;
   hitFlashTimer = 0;
   particles = [];
+  pickups = [];
+  pickupSpawnTimer = 240;
+  speedPenalty = 0;
+  shieldTimer = 0;
 }
 
 const EXPLOSION_COLORS = ['#2e2440', '#c0392b', '#4a3a66', '#1a1512'];
+const PICKUP_EXPLOSION_COLORS = {
+  points: ['#ffe066', '#ffbf3f', '#fff6d6'],
+  slow: ['#8fd9ff', '#4fb3e0', '#eaf9ff'],
+  shield: ['#baffc9', '#5fd98a', '#eafff0'],
+};
 
-function spawnExplosion(cx, cy) {
-  for (let i = 0; i < 14; i++) {
+function spawnExplosion(cx, cy, colors = EXPLOSION_COLORS, count = 14, opts = {}) {
+  const { round = false, speedMul = 1, sizeMul = 1 } = opts;
+  for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 1 + Math.random() * 2.5;
+    const speed = (1 + Math.random() * 2.5) * speedMul;
     const life = 20 + Math.random() * 12;
     particles.push({
       x: cx,
       y: cy,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed - 1,
-      size: 1.5 + Math.random() * 2.5,
-      color: EXPLOSION_COLORS[Math.floor(Math.random() * EXPLOSION_COLORS.length)],
+      size: (1.5 + Math.random() * 2.5) * sizeMul,
+      color: colors[Math.floor(Math.random() * colors.length)],
       rotation: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.6,
       life,
       maxLife: life,
+      round,
     });
   }
 }
@@ -348,6 +369,25 @@ function spawnObstacle() {
   else spawnDuck();
 }
 
+function spawnPickup() {
+  const r = Math.random();
+  const type = r < 0.55 ? 'points' : r < 0.85 ? 'slow' : 'shield';
+
+  const w = 14;
+  const h = 14;
+  // Float roughly at standing chest-height, with a little jitter, so
+  // collecting them is a reward for being on the ground - not an extra
+  // precision-jump challenge on top of the obstacles.
+  const standingCy = GROUND_Y - CHAR_H / 2;
+  const y = standingCy - h / 2 + (Math.random() * 10 - 5);
+
+  const pickup = { x: canvas.width, y, w, h, type, bobSeed: Math.random() * 10 };
+  if (type === 'points') pickup.value = 50 + Math.floor(Math.random() * 51);
+  else if (type === 'slow') pickup.value = -(1 + Math.floor(Math.random() * 5));
+
+  pickups.push(pickup);
+}
+
 function update() {
   if (gameOver) {
     gameOverTimer += 1;
@@ -378,7 +418,11 @@ function update() {
 
   const squatNow = squatting && !jumping;
 
-  const speed = Math.min(MAX_SPEED, BASE_SPEED + score * SPEED_RAMP);
+  const speed = Math.max(
+    MIN_SPEED,
+    Math.min(MAX_SPEED, BASE_SPEED + score * SPEED_RAMP) - speedPenalty
+  );
+  speedPenalty = Math.max(0, speedPenalty - SPEED_PENALTY_DECAY);
 
   // Day/night keeps cycling off score (not speed, which caps out), so the
   // game doesn't get stuck in permanent night once at top speed.
@@ -413,18 +457,28 @@ function update() {
     spawnTimer = interval + Math.random() * interval;
   }
 
+  pickupSpawnTimer -= 1;
+  if (pickupSpawnTimer <= 0) {
+    spawnPickup();
+    pickupSpawnTimer = 360 + Math.random() * 240;
+  }
+
   obstacles.forEach((o) => (o.x -= speed));
   obstacles = obstacles.filter((o) => o.x + o.w > 0);
 
+  pickups.forEach((p) => (p.x -= speed));
+  pickups = pickups.filter((p) => p.x + p.w > 0);
+
   if (invulnTimer > 0) invulnTimer -= 1;
   if (hitFlashTimer > 0) hitFlashTimer -= 1;
+  if (shieldTimer > 0) shieldTimer -= 1;
 
   const charBox = squatNow
     ? { x: CHAR_X, y: GROUND_Y - SQUAT_H, w: CHAR_W, h: SQUAT_H }
     : { x: CHAR_X, y: charY, w: CHAR_W, h: CHAR_H };
 
   let hit = false;
-  if (invulnTimer <= 0) {
+  if (invulnTimer <= 0 && shieldTimer <= 0) {
     for (const o of obstacles) {
       if (
         charBox.x < o.x + o.w &&
@@ -446,6 +500,28 @@ function update() {
       hitFlashTimer = HIT_FLASH_FRAMES;
     } else {
       gameOver = true;
+    }
+  }
+
+  for (let i = pickups.length - 1; i >= 0; i--) {
+    const p = pickups[i];
+    if (
+      charBox.x < p.x + p.w &&
+      charBox.x + charBox.w > p.x &&
+      charBox.y < p.y + p.h &&
+      charBox.y + charBox.h > p.y
+    ) {
+      if (p.type === 'points') score += p.value;
+      else if (p.type === 'slow') speedPenalty = Math.min(MAX_SPEED_PENALTY, speedPenalty + Math.abs(p.value));
+      else if (p.type === 'shield') shieldTimer = SHIELD_FRAMES;
+
+      spawnExplosion(p.x + p.w / 2, p.y + p.h / 2, PICKUP_EXPLOSION_COLORS[p.type], 16, {
+        round: true,
+        speedMul: 1.4,
+        sizeMul: 0.8,
+      });
+
+      pickups.splice(i, 1);
     }
   }
 
@@ -1375,9 +1451,75 @@ function drawParticles() {
     ctx.translate(p.x, p.y);
     ctx.rotate(p.rotation);
     ctx.fillStyle = p.color;
-    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    if (p.round) {
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    }
     ctx.restore();
   });
+}
+
+const PICKUP_STYLES = {
+  points: { fill: '#ffe066', ring: '#c98a12', text: '#5c3d00', glow: 'rgba(255, 224, 102, 0.35)' },
+  slow: { fill: '#8fd9ff', ring: '#2f8fc2', text: '#063a52', glow: 'rgba(143, 217, 255, 0.35)' },
+  shield: { fill: '#baffc9', ring: '#2f9e55', text: '#0a3d1c', glow: 'rgba(186, 255, 201, 0.35)' },
+};
+
+function drawPickup(p, frame) {
+  const style = PICKUP_STYLES[p.type];
+  const bob = Math.sin((frame + p.bobSeed) * 0.12) * 1.5;
+  const cx = p.x + p.w / 2;
+  const cy = p.y + p.h / 2 + bob;
+  const r = p.w / 2;
+
+  ctx.fillStyle = style.glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = style.fill;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = style.ring;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.beginPath();
+  ctx.ellipse(cx - r * 0.3, cy - r * 0.3, r * 0.3, r * 0.18, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (p.type === 'shield') {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r * 0.55);
+    ctx.lineTo(cx + r * 0.5, cy - r * 0.25);
+    ctx.lineTo(cx + r * 0.4, cy + r * 0.35);
+    ctx.lineTo(cx, cy + r * 0.6);
+    ctx.lineTo(cx - r * 0.4, cy + r * 0.35);
+    ctx.lineTo(cx - r * 0.5, cy - r * 0.25);
+    ctx.closePath();
+    ctx.fillStyle = '#eafff0';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = style.text;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r * 0.45);
+    ctx.lineTo(cx, cy + r * 0.5);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = style.text;
+    ctx.font = 'bold 6px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.type === 'points' ? `+${p.value}` : String(p.value), cx, cy + 0.5);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
 }
 
 function drawObstacle(o, frame) {
@@ -1401,9 +1543,27 @@ function draw() {
   drawBackground();
 
   obstacles.forEach((o) => drawObstacle(o, score));
+  pickups.forEach((p) => drawPickup(p, score));
 
   const flashHidden = invulnTimer > 0 && Math.floor(invulnTimer / 4) % 2 === 0;
   if (!flashHidden) drawCharacter();
+
+  if (shieldTimer > 0) {
+    const flicker = shieldTimer < 60 && Math.floor(shieldTimer / 6) % 2 === 0;
+    if (!flicker) {
+      const squatNow = squatting && !jumping;
+      const auraCx = CHAR_X + CHAR_W / 2;
+      const auraCy = (squatNow ? GROUND_Y - SQUAT_H : charY) + (squatNow ? SQUAT_H : CHAR_H) / 2;
+      const pulse = 1 + Math.sin(score * 0.3) * 0.08;
+      ctx.fillStyle = 'rgba(120, 255, 170, 0.14)';
+      ctx.beginPath();
+      ctx.ellipse(auraCx, auraCy, 11 * pulse, 13 * pulse, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(120, 255, 170, 0.85)';
+      ctx.stroke();
+    }
+  }
 
   drawParticles();
 
@@ -1484,7 +1644,7 @@ async function initFaceLandmarker() {
     await startCamera();
     statusEl.textContent = 'Loading smile detector...';
     const faceLandmarker = await initFaceLandmarker();
-    statusEl.textContent = 'Smile to jump • stay still under birds & dragons 🐦🐉 • tilt your head down to squat under branches';
+    statusEl.textContent = 'Smile to jump • tilt your head down to squat • grab the bubbles: gold = points, blue = slow down, green = shield';
     setTimeout(() => {
       statusEl.textContent = '';
     }, 4500);
