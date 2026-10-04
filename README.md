@@ -33,6 +33,10 @@ Express app under `demos/`.
 * [Asteroid Race](./demos/game-race/) (port 3009) — a spaceship dodging
   asteroids in a fullscreen 3D tunnel, controlled by keyboard (and later a
   phone over Web Bluetooth).
+* [Tilt Controller PWA](./demos/controller-pwa/) (port 3010) — an installable
+  PWA that reads the phone's orientation sensors and visualizes tilt
+  left/right/up/down in real time; first step toward a Bluetooth game
+  controller.
 
 ## Running
 

@@ -1,0 +1,13 @@
+{
+  "name": "controller-pwa-demo",
+  "version": "1.0.0",
+  "description": "PWA phone controller - tilt the phone to see live accelerometer/orientation readings, the first step toward a Bluetooth game controller",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

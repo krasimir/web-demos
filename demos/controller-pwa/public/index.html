@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tilt Controller</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1a1a2e">
+
+<!-- iOS "Add to Home Screen" support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tilt Controller">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #1a1a2e;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  #app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px);
+    box-sizing: border-box;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #8f8fc7;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #level {
+    position: relative;
+    width: min(70vw, 70vh, 300px);
+    height: min(70vw, 70vh, 300px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 42%, #2a2a46, #15152a 72%);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+  }
+
+  #level::before,
+  #level::after {
+    content: '';
+    position: absolute;
+    background: rgba(255,255,255,0.08);
+  }
+  #level::before { left: 0; right: 0; top: 50%; height: 1px; }
+  #level::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.06);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .ring-outer { width: 100%; height: 100%; }
+  .ring-mid { width: 66%; height: 66%; }
+  .ring-inner { width: 33%; height: 33%; }
+
+  #dot {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #4caf50;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 16px rgba(76, 175, 80, 0.8);
+    transition: background-color 0.15s linear;
+  }
+  #dot.edge { background: #ff5252; box-shadow: 0 0 16px rgba(255, 82, 82, 0.8); }
+
+  #readout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(70vw, 300px);
+  }
+
+  .meter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .meter-label {
+    width: 70px;
+    font-size: 12px;
+    color: #9a9ac0;
+    flex-shrink: 0;
+  }
+  .meter-track {
+    position: relative;
+    flex: 1;
+    height: 8px;
+    background: #2a2a46;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .meter-track::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(255,255,255,0.2);
+  }
+  .meter-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    left: 50%;
+    background: #6c5ce7;
+    transition: width 0.05s linear, left 0.05s linear;
+  }
+  .meter-value {
+    width: 48px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: #c9c9e8;
+    flex-shrink: 0;
+  }
+
+  #status {
+    text-align: center;
+    color: #9a9ac0;
+    font-size: 13px;
+    min-height: 18px;
+  }
+
+  button {
+    font-family: inherit;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #start-btn {
+    background: #6c5ce7;
+    color: #fff;
+  }
+  #start-btn:active { background: #5b4bd1; }
+  #start-btn[hidden] { display: none; }
+
+  #recalibrate-btn {
+    background: rgba(255,255,255,0.08);
+    color: #c9c9e8;
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+  #recalibrate-btn[hidden] { display: none; }
+
+  #install-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    z-index: 6;
+    display: none;
+    justify-content: center;
+    padding: 0 10px;
+  }
+  #install-banner.visible { display: flex; }
+
+  #install-banner .inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 480px;
+    background: rgba(20, 20, 30, 0.9);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #eee;
+    font-family: sans-serif;
+    font-size: 12.5px;
+    line-height: 1.3;
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  #install-banner .install-icon { font-size: 20px; flex-shrink: 0; }
+  #install-banner .install-text { flex: 1; }
+  #install-banner .install-text b { color: #fff; }
+
+  #install-banner button {
+    border: none;
+    border-radius: 6px;
+    font-family: sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  #install-banner .install-action {
+    background: #6c5ce7;
+    color: #fff;
+    padding: 6px 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  #install-banner .install-dismiss {
+    background: transparent;
+    color: #999;
+    padding: 4px 6px;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+  <div id="app">
+    <h1>Tilt Controller</h1>
+
+    <div id="level">
+      <div class="ring ring-outer"></div>
+      <div class="ring ring-mid"></div>
+      <div class="ring ring-inner"></div>
+      <div id="dot"></div>
+    </div>
+
+    <div id="readout">
+      <div class="meter-row">
+        <div class="meter-label">Left / Right</div>
+        <div class="meter-track"><div id="lr-fill" class="meter-fill"></div></div>
+        <div id="lr-value" class="meter-value">0°</div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-label">Up / Down</div>
+        <div class="meter-track"><div id="ud-fill" class="meter-fill"></div></div>
+        <div id="ud-value" class="meter-value">0°</div>
+      </div>
+    </div>
+
+    <div id="status">Tap Start to enable motion sensors</div>
+
+    <button id="start-btn" type="button">Start</button>
+    <button id="recalibrate-btn" type="button" hidden>Recalibrate center</button>
+  </div>
+
+  <div id="install-banner">
+    <div class="inner">
+      <div class="install-icon">📲</div>
+      <div class="install-text" id="install-text"></div>
+      <button class="install-action" id="install-action" type="button" hidden>Install</button>
+      <button class="install-dismiss" id="install-dismiss" type="button" aria-label="Dismiss">✕</button>
+    </div>
+  </div>
+
+  <script src="install-prompt.js"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "Tilt Controller",
+  "short_name": "Tilt Controller",
+  "description": "Tilt your phone left/right/up/down and see the live motion readings - the first step toward a Bluetooth game controller",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

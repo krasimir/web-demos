@@ -28,6 +28,24 @@ let centerX = 0;
 let centerY = 0;
 let screenRadius = 0;
 let worldRadiusX = 1;
+let planets = [];
+
+const PLANET_PALETTES = [
+  { body: 'rgba(92,104,130,0.55)', glow: 'rgba(92,104,130,0.12)' },
+  { body: 'rgba(128,96,104,0.5)', glow: 'rgba(128,96,104,0.1)' },
+  { body: 'rgba(92,118,106,0.5)', glow: 'rgba(92,118,106,0.1)' },
+  { body: 'rgba(132,112,80,0.45)', glow: 'rgba(132,112,80,0.1)' },
+];
+
+function initPlanets() {
+  const count = 2 + Math.floor(Math.random() * 2);
+  planets = Array.from({ length: count }, () => ({
+    x: Math.random(),
+    y: Math.random() * 0.7,
+    r: 0.05 + Math.random() * 0.08,
+    palette: PLANET_PALETTES[Math.floor(Math.random() * PLANET_PALETTES.length)],
+  }));
+}
 
 function resize() {
   width = window.innerWidth;
@@ -38,6 +56,7 @@ function resize() {
   centerY = height / 2;
   screenRadius = Math.min(width, height) * 1.2;
   worldRadiusX = WORLD_RADIUS_Y * (width / height);
+  initPlanets();
 }
 window.addEventListener('resize', resize);
 resize();
@@ -198,6 +217,37 @@ function update(dt) {
   scoreEl.textContent = Math.floor(score);
 }
 
+function drawPlanets() {
+  for (const planet of planets) {
+    const cx = planet.x * width;
+    const cy = planet.y * height;
+    const r = planet.r * Math.min(width, height);
+
+    const glow = ctx.createRadialGradient(cx, cy, r * 0.75, cx, cy, r * 1.35);
+    glow.addColorStop(0, planet.palette.glow);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 1.35, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = planet.palette.body;
+    ctx.fill();
+
+    ctx.save();
+    ctx.clip();
+    const shade = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+    shade.addColorStop(0, 'rgba(255,255,255,0.1)');
+    shade.addColorStop(0.5, 'rgba(0,0,0,0)');
+    shade.addColorStop(1, 'rgba(0,0,0,0.4)');
+    ctx.fillStyle = shade;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.restore();
+  }
+}
+
 function drawStars() {
   ctx.fillStyle = '#fff';
   for (const star of stars) {
@@ -274,15 +324,6 @@ function drawShip() {
   const h = w * shipImageAspect;
   ctx.save();
   ctx.translate(centerX, centerY);
-
-  ctx.save();
-  ctx.scale(1, 0.4);
-  ctx.beginPath();
-  ctx.ellipse(0, h * 0.9, w * 0.32, h * 0.4, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  ctx.fill();
-  ctx.restore();
-
   ctx.rotate(ship.roll);
 
   if (shipImageReady) {
@@ -295,6 +336,7 @@ function drawShip() {
 function draw() {
   ctx.fillStyle = '#05060a';
   ctx.fillRect(0, 0, width, height);
+  drawPlanets();
   drawStars();
 
   const sorted = [...rocks].sort((a, b) => b.z - a.z);
