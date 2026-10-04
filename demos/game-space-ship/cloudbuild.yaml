@@ -1,0 +1,22 @@
+steps:
+  # Build the container image
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      ["builds", "submit", "--tag", "gcr.io/wisepot/game-space-ship"]
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "deploy",
+        "game-space-ship",
+        "--image",
+        "gcr.io/wisepot/game-space-ship",
+        "--region",
+        "europe-west1",
+        "--platform",
+        "managed",
+        "--min-instances",
+        "0",
+        "--allow-unauthenticated"
+      ]

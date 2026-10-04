@@ -1,6 +1,94 @@
-<video autoplay playsinline></video>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+  }
+
+  video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+  }
+
+  select {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    padding: 8px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+  }
+</style>
+</head>
+<body>
+
+<video autoplay playsinline muted></video>
+<select id="cameraSelect"></select>
+
 <script>
-navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-  document.querySelector('video').srcObject = stream;
+const video = document.querySelector('video');
+const select = document.getElementById('cameraSelect');
+let currentStream = null;
+
+function stopCurrentStream() {
+  if (currentStream) {
+    currentStream.getTracks().forEach(track => track.stop());
+  }
+}
+
+function startCamera(deviceId) {
+  stopCurrentStream();
+  const constraints = {
+    video: deviceId ? { deviceId: { exact: deviceId } } : true
+  };
+  return navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+    currentStream = stream;
+    video.srcObject = stream;
+  });
+}
+
+function populateCameraList() {
+  return navigator.mediaDevices.enumerateDevices().then(devices => {
+    const cameras = devices.filter(d => d.kind === 'videoinput');
+    select.innerHTML = '';
+
+    if (cameras.length <= 1) {
+      select.style.display = 'none';
+      return;
+    }
+
+    select.style.display = 'block';
+    cameras.forEach((camera, i) => {
+      const option = document.createElement('option');
+      option.value = camera.deviceId;
+      option.textContent = camera.label || `Camera ${i + 1}`;
+      select.appendChild(option);
+    });
+  });
+}
+
+select.addEventListener('change', () => {
+  startCamera(select.value);
 });
+
+startCamera()
+  .then(populateCameraList)
+  .catch(err => console.error('Camera error:', err));
 </script>
+
+</body>
+</html>

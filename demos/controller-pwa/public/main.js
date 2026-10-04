@@ -2,7 +2,6 @@
 // before the dot reaches the edge of the level / the bars read 100%.
 const MAX_TILT_DEG = 45;
 
-const startBtn = document.getElementById('start-btn');
 const recalibrateBtn = document.getElementById('recalibrate-btn');
 const statusEl = document.getElementById('status');
 const dot = document.getElementById('dot');
@@ -39,12 +38,44 @@ if ('serviceWorker' in navigator) {
 // Whatever orientation the phone happens to be held in when the user taps
 // "Start" (or "Recalibrate") becomes the zero point - this is a controller,
 // not an absolute compass, so it should work equally well propped up,
-// held flat, or held like a steering wheel.
-let baselineBeta = null;
-let baselineGamma = null;
+// held flat, or held like a steering wheel. Stored already screen-angle-
+// adjusted (see tiltFromEvent), so it stays meaningful across rotation.
+let baselineX = null;
+let baselineY = null;
 
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
+}
+
+function getScreenAngle() {
+  if (screen.orientation && typeof screen.orientation.angle === 'number') return screen.orientation.angle;
+  if (typeof window.orientation === 'number') return window.orientation;
+  return 0;
+}
+
+// beta/gamma are tied to the device's physical axes, not the screen: gamma
+// is always "tilt around the long edge" and beta "tilt around the short
+// edge", regardless of which way the screen is currently rotated. So which
+// one reads as left/right vs. up/down - and which sign means which
+// direction - flips with screen.orientation.angle. This remaps both back
+// to screen-relative left/right (x) and up/down (y).
+function tiltFromEvent(event) {
+  const angle = getScreenAngle();
+  switch (angle) {
+    // The textbook formula here is x: -beta/y: gamma (and the mirror for
+    // -90/270), but that reads backwards on both axes against what iOS
+    // actually reports once rotated into landscape - flipped against
+    // real-device testing.
+    case 90:
+      return { x: event.beta, y: -event.gamma };
+    case -90:
+    case 270:
+      return { x: -event.beta, y: event.gamma };
+    case 180:
+      return { x: -event.gamma, y: -event.beta };
+    default:
+      return { x: event.gamma, y: event.beta };
+  }
 }
 
 function setMeter(fillEl, valueEl, deltaDeg) {
@@ -62,15 +93,15 @@ function setMeter(fillEl, valueEl, deltaDeg) {
 function handleOrientation(event) {
   if (event.beta === null || event.gamma === null) return;
 
-  if (baselineBeta === null) {
-    baselineBeta = event.beta;
-    baselineGamma = event.gamma;
+  const { x, y } = tiltFromEvent(event);
+
+  if (baselineX === null) {
+    baselineX = x;
+    baselineY = y;
   }
 
-  // gamma: left/right tilt (phone rotating around its front-to-back axis).
-  // beta: forward/back tilt (phone rotating around its side-to-side axis).
-  const leftRight = event.gamma - baselineGamma;
-  const upDown = event.beta - baselineBeta;
+  const leftRight = x - baselineX;
+  const upDown = y - baselineY;
 
   setMeter(lrFill, lrValue, leftRight);
   setMeter(udFill, udValue, upDown);
@@ -85,41 +116,73 @@ function handleOrientation(event) {
   dot.classList.toggle('edge', atEdge);
 }
 
-async function requestMotionPermission() {
-  // iOS 13+ gates DeviceOrientationEvent behind an explicit permission
-  // prompt that must be triggered by a user gesture; every other platform
-  // just works without it.
-  const DOE = window.DeviceOrientationEvent;
-  if (DOE && typeof DOE.requestPermission === 'function') {
-    const result = await DOE.requestPermission();
-    if (result !== 'granted') throw new Error('permission-denied');
-  }
+function beginListening() {
+  baselineX = null;
+  baselineY = null;
+  window.addEventListener('deviceorientation', handleOrientation);
+  recalibrateBtn.hidden = false;
+  statusEl.textContent = 'Tilting enabled - hold the phone however feels natural.';
 }
 
-startBtn.addEventListener('click', async () => {
+// Rotating the phone changes which physical axis reads as left/right vs.
+// up/down (see tiltFromEvent), so the old baseline no longer means
+// "center" once the angle has changed - drop it and recalibrate against
+// whatever position the phone is in after the rotation settles.
+const resetBaselineOnRotation = () => {
+  baselineX = null;
+  baselineY = null;
+};
+if (screen.orientation) {
+  screen.orientation.addEventListener('change', resetBaselineOnRotation);
+} else {
+  window.addEventListener('orientationchange', resetBaselineOnRotation);
+}
+
+async function init() {
   if (!window.DeviceOrientationEvent) {
     statusEl.textContent = 'This device/browser has no orientation sensor support.';
     return;
   }
 
-  try {
-    await requestMotionPermission();
-  } catch (err) {
-    statusEl.textContent = 'Motion access denied. Enable it in Settings and reload.';
+  const DOE = window.DeviceOrientationEvent;
+  if (typeof DOE.requestPermission !== 'function') {
+    // Most non-iOS browsers expose the sensor with no permission gate, so
+    // the demo can just start reading tilt the moment the page loads.
+    beginListening();
     return;
   }
 
-  baselineBeta = null;
-  baselineGamma = null;
-  window.addEventListener('deviceorientation', handleOrientation);
-
-  startBtn.hidden = true;
-  recalibrateBtn.hidden = false;
-  statusEl.textContent = 'Tilting enabled - hold the phone however feels natural.';
-});
+  // iOS requires the permission prompt to be triggered synchronously from
+  // a user gesture - calling it ahead of time reliably resolves 'denied'
+  // (not an exception) on a fresh origin, which would strand the page with
+  // no way to retry short of a reload. So just wait for the first tap and
+  // request from inside that gesture every time.
+  //
+  // This specifically has to be a 'click' listener, not 'pointerdown' or
+  // 'touchstart': WebKit's user-activation check for this API only
+  // recognizes click as a valid trigger, and silently resolves to
+  // 'denied' (no prompt, no error) when called from the earlier raw
+  // touch events instead.
+  statusEl.textContent = 'Tap anywhere to enable motion sensors.';
+  document.addEventListener(
+    'click',
+    async () => {
+      try {
+        const result = await DOE.requestPermission();
+        if (result === 'granted') beginListening();
+        else statusEl.textContent = 'Motion access denied. Enable it in Settings and reload.';
+      } catch (err) {
+        statusEl.textContent = 'Motion access denied. Enable it in Settings and reload.';
+      }
+    },
+    { once: true }
+  );
+}
 
 recalibrateBtn.addEventListener('click', () => {
-  baselineBeta = null;
-  baselineGamma = null;
+  baselineX = null;
+  baselineY = null;
   statusEl.textContent = 'Recalibrated - current position is now center.';
 });
+
+init();

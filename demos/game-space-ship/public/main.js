@@ -28,24 +28,6 @@ let centerX = 0;
 let centerY = 0;
 let screenRadius = 0;
 let worldRadiusX = 1;
-let planets = [];
-
-const PLANET_PALETTES = [
-  { body: 'rgba(92,104,130,0.55)', glow: 'rgba(92,104,130,0.12)' },
-  { body: 'rgba(128,96,104,0.5)', glow: 'rgba(128,96,104,0.1)' },
-  { body: 'rgba(92,118,106,0.5)', glow: 'rgba(92,118,106,0.1)' },
-  { body: 'rgba(132,112,80,0.45)', glow: 'rgba(132,112,80,0.1)' },
-];
-
-function initPlanets() {
-  const count = 2 + Math.floor(Math.random() * 2);
-  planets = Array.from({ length: count }, () => ({
-    x: Math.random(),
-    y: Math.random() * 0.7,
-    r: 0.05 + Math.random() * 0.08,
-    palette: PLANET_PALETTES[Math.floor(Math.random() * PLANET_PALETTES.length)],
-  }));
-}
 
 function resize() {
   width = window.innerWidth;
@@ -56,7 +38,6 @@ function resize() {
   centerY = height / 2;
   screenRadius = Math.min(width, height) * 1.2;
   worldRadiusX = WORLD_RADIUS_Y * (width / height);
-  initPlanets();
 }
 window.addEventListener('resize', resize);
 resize();
@@ -70,6 +51,13 @@ shipImage.onload = () => {
 };
 shipImage.src = 'assets/ship.png';
 const shipImageAspect = 111 / 260;
+
+const bgImage = new Image();
+let bgImageReady = false;
+bgImage.onload = () => {
+  bgImageReady = true;
+};
+bgImage.src = 'assets/space-bg.png';
 
 let ship = { x: 0, y: 0, vx: 0, vy: 0, roll: 0 };
 let rocks = [];
@@ -120,15 +108,33 @@ function rollRockRadius() {
   return ROCK_SIZES[0].min;
 }
 
+const STATION_CHANCE = 0.06;
+
 function spawnRock() {
   const angle = Math.random() * Math.PI * 2;
   const dist = 0.3 + Math.random() * 0.7;
   const x = Math.cos(angle) * dist * worldRadiusX;
   const y = Math.sin(angle) * dist * WORLD_RADIUS_Y;
+
+  if (Math.random() < STATION_CHANCE) {
+    rocks.push({
+      type: 'station',
+      x,
+      y,
+      z: FAR_Z,
+      radius: 0.55 + Math.random() * 0.4,
+      spin: (Math.random() - 0.5) * 0.15,
+      angle: Math.random() * Math.PI * 2,
+      lightSeed: Math.random() * 20,
+    });
+    return;
+  }
+
   const radius = rollRockRadius();
   const craterCount = Math.round(3 + radius * 10 + Math.random() * 3);
 
   rocks.push({
+    type: 'rock',
     x,
     y,
     z: FAR_Z,
@@ -202,7 +208,7 @@ function update(dt) {
       }
     }
     if (rock.z <= -NEAR_Z) {
-      if (!lost) score += 10;
+      if (!lost) score += rock.type === 'station' ? 35 : 10;
       return false;
     }
     return true;
@@ -217,35 +223,24 @@ function update(dt) {
   scoreEl.textContent = Math.floor(score);
 }
 
-function drawPlanets() {
-  for (const planet of planets) {
-    const cx = planet.x * width;
-    const cy = planet.y * height;
-    const r = planet.r * Math.min(width, height);
+function drawBackground() {
+  ctx.fillStyle = '#05060a';
+  ctx.fillRect(0, 0, width, height);
+  if (!bgImageReady) return;
 
-    const glow = ctx.createRadialGradient(cx, cy, r * 0.75, cx, cy, r * 1.35);
-    glow.addColorStop(0, planet.palette.glow);
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * 1.35, 0, Math.PI * 2);
-    ctx.fillStyle = glow;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = planet.palette.body;
-    ctx.fill();
-
-    ctx.save();
-    ctx.clip();
-    const shade = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
-    shade.addColorStop(0, 'rgba(255,255,255,0.1)');
-    shade.addColorStop(0.5, 'rgba(0,0,0,0)');
-    shade.addColorStop(1, 'rgba(0,0,0,0.4)');
-    ctx.fillStyle = shade;
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-    ctx.restore();
+  const imgAspect = bgImage.width / bgImage.height;
+  const screenAspect = width / height;
+  let dw, dh;
+  if (screenAspect > imgAspect) {
+    dw = width;
+    dh = width / imgAspect;
+  } else {
+    dh = height;
+    dw = height * imgAspect;
   }
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage(bgImage, (width - dw) / 2, (height - dh) / 2, dw, dh);
+  ctx.globalAlpha = 1;
 }
 
 function drawStars() {
@@ -261,7 +256,100 @@ function drawStars() {
   ctx.globalAlpha = 1;
 }
 
+function drawStation(rock) {
+  const p = project(rock.x, rock.y, rock.z);
+  if (p.scale <= 0) return;
+  const r = rock.radius * screenRadius * p.scale;
+  const extent = r * 2.4;
+  if (r < 1 || p.sx < -extent || p.sx > width + extent || p.sy < -extent || p.sy > height + extent) return;
+
+  const shade = Math.min(1, p.scale);
+
+  ctx.save();
+  ctx.translate(p.sx, p.sy);
+  ctx.rotate(rock.angle);
+
+  const hw = r;
+  const hh = r * 0.62;
+  const panelW = r * 1.7;
+  const panelH = r * 0.5;
+
+  for (const side of [-1, 1]) {
+    ctx.strokeStyle = 'rgba(150,160,175,0.6)';
+    ctx.lineWidth = Math.max(1, r * 0.025);
+    ctx.beginPath();
+    ctx.moveTo(side * hw * 0.5, 0);
+    ctx.lineTo(side * (hw * 0.5 + panelW * 0.55), 0);
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(side * (hw * 0.5 + panelW * 0.55), 0);
+    const panelGrad = ctx.createLinearGradient(-panelW / 2, -panelH / 2, panelW / 2, panelH / 2);
+    panelGrad.addColorStop(0, `rgba(${40 + shade * 20},${55 + shade * 25},${95 + shade * 40},0.95)`);
+    panelGrad.addColorStop(1, `rgba(${18 + shade * 12},${28 + shade * 18},${52 + shade * 28},0.95)`);
+    ctx.fillStyle = panelGrad;
+    ctx.fillRect(-panelW / 2, -panelH / 2, panelW, panelH);
+    ctx.strokeStyle = 'rgba(8,10,16,0.85)';
+    ctx.lineWidth = Math.max(0.5, r * 0.012);
+    const cols = 5;
+    for (let i = 1; i < cols; i++) {
+      const gx = -panelW / 2 + (panelW / cols) * i;
+      ctx.beginPath();
+      ctx.moveTo(gx, -panelH / 2);
+      ctx.lineTo(gx, panelH / 2);
+      ctx.stroke();
+    }
+    ctx.strokeRect(-panelW / 2, -panelH / 2, panelW, panelH);
+    ctx.restore();
+  }
+
+  const hullGrad = ctx.createLinearGradient(-hw, -hh, hw, hh);
+  hullGrad.addColorStop(0, `rgb(${150 + shade * 40},${158 + shade * 40},${172 + shade * 40})`);
+  hullGrad.addColorStop(0.5, `rgb(${92 + shade * 28},${100 + shade * 28},${114 + shade * 28})`);
+  hullGrad.addColorStop(1, `rgb(${44 + shade * 18},${50 + shade * 18},${60 + shade * 18})`);
+  ctx.beginPath();
+  ctx.moveTo(-hw * 0.5, -hh);
+  ctx.lineTo(hw * 0.5, -hh);
+  ctx.lineTo(hw, 0);
+  ctx.lineTo(hw * 0.5, hh);
+  ctx.lineTo(-hw * 0.5, hh);
+  ctx.lineTo(-hw, 0);
+  ctx.closePath();
+  ctx.fillStyle = hullGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(12,14,20,0.9)';
+  ctx.lineWidth = Math.max(1, r * 0.025);
+  ctx.stroke();
+
+  ctx.save();
+  ctx.clip();
+  const gridCols = 6;
+  const gridRows = 3;
+  for (let gy = 0; gy < gridRows; gy++) {
+    for (let gx = 0; gx < gridCols; gx++) {
+      const lx = -hw * 0.75 + ((hw * 1.5) / (gridCols - 1)) * gx;
+      const ly = -hh * 0.55 + ((hh * 1.1) / (gridRows - 1)) * gy;
+      const flicker = (Math.sin(elapsed * 2 + gx * 1.7 + gy * 2.3 + rock.lightSeed) + 1) / 2;
+      ctx.fillStyle = `rgba(255,215,150,${0.15 + flicker * 0.5})`;
+      ctx.fillRect(lx - r * 0.025, ly - r * 0.02, r * 0.05, r * 0.04);
+    }
+  }
+  ctx.restore();
+
+  const beacon = (Math.sin(elapsed * 5 + rock.lightSeed) + 1) / 2;
+  ctx.beginPath();
+  ctx.arc(hw * 0.92, 0, Math.max(1, r * 0.05), 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255,70,70,${0.4 + beacon * 0.6})`;
+  ctx.fill();
+
+  ctx.restore();
+}
+
 function drawRock(rock) {
+  if (rock.type === 'station') {
+    drawStation(rock);
+    return;
+  }
   const p = project(rock.x, rock.y, rock.z);
   if (p.scale <= 0) return;
   const r = rock.radius * screenRadius * p.scale;
@@ -334,9 +422,7 @@ function drawShip() {
 }
 
 function draw() {
-  ctx.fillStyle = '#05060a';
-  ctx.fillRect(0, 0, width, height);
-  drawPlanets();
+  drawBackground();
   drawStars();
 
   const sorted = [...rocks].sort((a, b) => b.z - a.z);

@@ -30,7 +30,7 @@ Express app under `demos/`.
 * [Smile Jump PWA](./demos/game-smile-pwa/) (port 3008) — the full-viewport,
   installable PWA version of Smile Jump, built for landscape play on an
   iPhone home screen.
-* [Asteroid Race](./demos/game-race/) (port 3009) — a spaceship dodging
+* [Asteroid Race](./demos/game-space-ship/) (port 3009) — a spaceship dodging
   asteroids in a fullscreen 3D tunnel, controlled by keyboard (and later a
   phone over Web Bluetooth).
 * [Tilt Controller PWA](./demos/controller-pwa/) (port 3010) — an installable
