@@ -10,8 +10,9 @@ Express app under `demos/`.
 * [Parallelism](./demos/parallelism-fractal/) (port 3002) — renders a
   Mandelbrot fractal and compares main-thread execution vs. a single Web
   Worker vs. multiple parallel Web Workers.
-* [Camera capture](./demos/camera-capture/) (port 3003) — captures a still
-  photo from a connected camera using `getUserMedia`.
+* [Camera capture AI](./demos/camera-capture-ai/) (port 3003) — live webcam
+  preview and still capture, plus a real-time, fully on-device smile detector
+  built on MediaPipe Tasks Vision.
 * [WebMCP registration](./demos/webmcp-checkout/) (port 3004) — a name/email/
   phone registration form that registers
   [WebMCP](https://webmachinelearning.github.io/webmcp/) tools via
@@ -22,6 +23,16 @@ Express app under `demos/`.
   split-screen playground with a CodeMirror-based HTML/CSS/JS editor on the
   right and a live, sandboxed preview on the left, for demoing new web
   platform features.
+* [Camera basic](./demos/camera-basic/) (port 3006) — the bare minimum
+  `getUserMedia` camera feed, no capture or detection.
+* [Smile Jump](./demos/game-smile/) (port 3007) — a pixel-art runner you
+  control by smiling at the camera; a bigger smile means a bigger jump.
+* [Smile Jump PWA](./demos/game-smile-pwa/) (port 3008) — the full-viewport,
+  installable PWA version of Smile Jump, built for landscape play on an
+  iPhone home screen.
+* [Asteroid Race](./demos/game-race/) (port 3009) — a spaceship dodging
+  asteroids in a fullscreen 3D tunnel, controlled by keyboard (and later a
+  phone over Web Bluetooth).
 
 ## Running
 

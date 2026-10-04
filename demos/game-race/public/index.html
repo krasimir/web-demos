@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Asteroid Run</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: #000; height: 100%; }
+  #game { display: block; width: 100vw; height: 100vh; background: #000; touch-action: none; }
+
+  #hud { position: fixed; top: 16px; left: 16px; color: #eee; font-family: 'Courier New', monospace; font-size: 20px; text-shadow: 0 0 6px rgba(0,0,0,0.8); pointer-events: none; }
+  #hud .label { color: #6cf; }
+
+  #fullscreen-btn { position: fixed; top: 16px; right: 16px; background: rgba(255,255,255,0.08); color: #eee; border: 1px solid #456; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 14px; padding: 8px 12px; cursor: pointer; }
+  #fullscreen-btn:hover { background: rgba(255,255,255,0.16); }
+
+  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #eee; font-family: 'Courier New', monospace; background: rgba(0,0,0,0.6); }
+  .overlay h1 { font-size: 42px; letter-spacing: 4px; color: #6cf; text-shadow: 0 0 16px rgba(108,204,255,0.6); margin: 0 0 8px; }
+  .overlay p { color: #aab; margin: 4px 0; font-size: 15px; }
+  .overlay .score { font-size: 22px; color: #fff; margin: 16px 0; }
+  .overlay button { margin-top: 20px; background: #1a3a52; color: #6cf; border: 1px solid #6cf; border-radius: 6px; font-family: inherit; font-size: 16px; padding: 10px 24px; cursor: pointer; }
+  .overlay button:hover { background: #244e6e; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <span class="label">SCORE</span> <span id="score">0</span>
+  </div>
+
+  <button id="fullscreen-btn">⛶ Fullscreen</button>
+
+  <div id="start-overlay" class="overlay">
+    <h1>ASTEROID RUN</h1>
+    <p>Steer your ship through the asteroid field.</p>
+    <p>Arrow keys / WASD to move. Survive as long as you can.</p>
+    <button id="start-btn">Launch</button>
+  </div>
+
+  <div id="gameover-overlay" class="overlay hidden">
+    <h1>SHIP LOST</h1>
+    <div class="score">Score: <span id="final-score">0</span></div>
+    <button id="retry-btn">Try Again</button>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
