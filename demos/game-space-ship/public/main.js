@@ -1,16 +1,45 @@
 import { createKeyboardController } from './controllers/keyboard.js';
+import { createTiltController } from './controllers/tilt.js';
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      // Check for a new version right away, and again whenever the app is
+      // brought back to the foreground (e.g. reopened from the home
+      // screen) so an installed PWA doesn't sit on a stale build.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+  });
+
+  // sw.js calls skipWaiting()/clients.claim() unconditionally, so once a
+  // new service worker takes over an already-controlled page, reload to
+  // pick up the matching HTML/JS. The very first controllerchange (fresh
+  // install, no prior controller) is not an update, so it's ignored.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloadedForUpdate = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloadedForUpdate) return;
+    reloadedForUpdate = true;
+    window.location.reload();
+  });
+}
 
 const NEAR_Z = 0.3;
-const FAR_Z = 8;
+const FAR_Z = 6;
 const WORLD_RADIUS_Y = 1.7;
 const SHIP_SPEED = 2.6;
 const SHIP_EASE = 5;
-const SHIP_HIT_RADIUS_PX = 44;
+const SHIP_HIT_RADIUS_RATIO = 0.0367;
 const BASE_ROCK_SPEED = 2.6;
 const MAX_ROCK_SPEED = 7.5;
 const SPEED_RAMP = 0.05;
 const MAX_ROLL = 0.55;
-const SHIP_WIDTH = 230;
+const SHIP_WIDTH_RATIO = 0.1917;
+const SHIP_WIDTH_RATIO_MOBILE = 0.26;
+const SCREEN_ZOOM = 1.2;
+const SCREEN_ZOOM_MOBILE = 1.55;
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -21,6 +50,13 @@ const gameoverOverlay = document.getElementById('gameover-overlay');
 const startBtn = document.getElementById('start-btn');
 const retryBtn = document.getElementById('retry-btn');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
+const instructionsEl = document.getElementById('instructions');
+
+const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+if (isMobile) {
+  fullscreenBtn.classList.add('hidden');
+  instructionsEl.textContent = 'Tilt your phone to steer. Survive as long as you can.';
+}
 
 let width = 0;
 let height = 0;
@@ -28,21 +64,29 @@ let centerX = 0;
 let centerY = 0;
 let screenRadius = 0;
 let worldRadiusX = 1;
+let shipWidth = 0;
+let shipHitRadiusPx = 0;
 
 function resize() {
-  width = window.innerWidth;
-  height = window.innerHeight;
+  const vv = window.visualViewport;
+  width = vv ? Math.round(vv.width) : window.innerWidth;
+  height = vv ? Math.round(vv.height) : window.innerHeight;
   canvas.width = width;
   canvas.height = height;
   centerX = width / 2;
   centerY = height / 2;
-  screenRadius = Math.min(width, height) * 1.2;
+  screenRadius = Math.min(width, height) * (isMobile ? SCREEN_ZOOM_MOBILE : SCREEN_ZOOM);
   worldRadiusX = WORLD_RADIUS_Y * (width / height);
+  shipWidth = Math.min(width, height) * (isMobile ? SHIP_WIDTH_RATIO_MOBILE : SHIP_WIDTH_RATIO);
+  shipHitRadiusPx = shipWidth * (SHIP_HIT_RADIUS_RATIO / SHIP_WIDTH_RATIO);
 }
 window.addEventListener('resize', resize);
+window.visualViewport?.addEventListener('resize', resize);
 resize();
 
-const controller = createKeyboardController();
+const keyboardController = createKeyboardController();
+const tiltController = isMobile ? createTiltController() : null;
+let controller = keyboardController;
 
 const shipImage = new Image();
 let shipImageReady = false;
@@ -109,14 +153,17 @@ function rollRockRadius() {
 }
 
 const STATION_CHANCE = 0.06;
+const TUNNEL_CHANCE = 0.05;
 
 function spawnRock() {
   const angle = Math.random() * Math.PI * 2;
-  const dist = 0.3 + Math.random() * 0.7;
+  const dist = 0.12 + Math.random() * 0.55;
   const x = Math.cos(angle) * dist * worldRadiusX;
   const y = Math.sin(angle) * dist * WORLD_RADIUS_Y;
 
-  if (Math.random() < STATION_CHANCE) {
+  const roll = Math.random();
+
+  if (roll < STATION_CHANCE) {
     rocks.push({
       type: 'station',
       x,
@@ -124,6 +171,22 @@ function spawnRock() {
       z: FAR_Z,
       radius: 0.55 + Math.random() * 0.4,
       spin: (Math.random() - 0.5) * 0.15,
+      angle: Math.random() * Math.PI * 2,
+      lightSeed: Math.random() * 20,
+    });
+    return;
+  }
+
+  if (roll < STATION_CHANCE + TUNNEL_CHANCE) {
+    const outer = 0.65 + Math.random() * 0.45;
+    rocks.push({
+      type: 'tunnel',
+      x,
+      y,
+      z: FAR_Z,
+      outer,
+      inner: outer * 0.56,
+      spin: (Math.random() - 0.5) * 0.12,
       angle: Math.random() * Math.PI * 2,
       lightSeed: Math.random() * 20,
     });
@@ -177,7 +240,7 @@ function update(dt) {
   spawnTimer -= dt;
   if (spawnTimer <= 0) {
     spawnRock();
-    spawnTimer = Math.max(0.35, 0.9 - elapsed * 0.01);
+    spawnTimer = Math.max(0.18, 0.6 - elapsed * 0.012);
   }
 
   const speed = rockSpeed();
@@ -202,13 +265,22 @@ function update(dt) {
       const dx = p.sx - centerX;
       const dy = p.sy - centerY;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const rockPx = rock.radius * screenRadius * p.scale;
-      if (dist < rockPx + SHIP_HIT_RADIUS_PX) {
-        lost = true;
+
+      if (rock.type === 'tunnel') {
+        const outerPx = rock.outer * screenRadius * p.scale;
+        const innerPx = rock.inner * screenRadius * p.scale;
+        if (dist > innerPx - shipHitRadiusPx * 0.4 && dist < outerPx + shipHitRadiusPx * 0.4) {
+          lost = true;
+        }
+      } else {
+        const rockPx = rock.radius * screenRadius * p.scale;
+        if (dist < rockPx + shipHitRadiusPx) {
+          lost = true;
+        }
       }
     }
     if (rock.z <= -NEAR_Z) {
-      if (!lost) score += rock.type === 'station' ? 35 : 10;
+      if (!lost) score += rock.type === 'station' ? 35 : rock.type === 'tunnel' ? 25 : 10;
       return false;
     }
     return true;
@@ -345,9 +417,71 @@ function drawStation(rock) {
   ctx.restore();
 }
 
+function drawTunnel(rock) {
+  const p = project(rock.x, rock.y, rock.z);
+  if (p.scale <= 0) return;
+  const outerR = rock.outer * screenRadius * p.scale;
+  const innerR = rock.inner * screenRadius * p.scale;
+  const extent = outerR * 1.3;
+  if (outerR < 2 || p.sx < -extent || p.sx > width + extent || p.sy < -extent || p.sy > height + extent) return;
+
+  const shade = Math.min(1, p.scale);
+
+  ctx.save();
+  ctx.translate(p.sx, p.sy);
+  ctx.rotate(rock.angle);
+
+  const segments = 18;
+  const midR = (outerR + innerR) / 2;
+
+  for (let i = 0; i < segments; i++) {
+    const a0 = (i / segments) * Math.PI * 2;
+    const a1 = ((i + 0.9) / segments) * Math.PI * 2;
+    const mid = (a0 + a1) / 2;
+    const lightness = 0.5 + 0.55 * Math.max(0, Math.cos(mid - 0.9));
+
+    ctx.beginPath();
+    ctx.arc(0, 0, outerR, a0, a1);
+    ctx.arc(0, 0, innerR, a1, a0, true);
+    ctx.closePath();
+    const r = Math.floor((70 + shade * 34) * (0.5 + lightness * 0.6));
+    const g = Math.floor((78 + shade * 34) * (0.5 + lightness * 0.6));
+    const b = Math.floor((98 + shade * 40) * (0.5 + lightness * 0.6));
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(8,10,16,0.75)';
+    ctx.lineWidth = Math.max(0.5, outerR * 0.012);
+    ctx.stroke();
+
+    if (i % 2 === 0) {
+      const lx = Math.cos(mid) * midR;
+      const ly = Math.sin(mid) * midR;
+      const flicker = (Math.sin(elapsed * 3 + i * 1.3 + rock.lightSeed) + 1) / 2;
+      ctx.beginPath();
+      ctx.arc(lx, ly, Math.max(1, outerR * 0.035), 0, Math.PI * 2);
+      ctx.fillStyle = i % 4 === 0 ? `rgba(255,90,90,${0.4 + flicker * 0.6})` : `rgba(120,255,150,${0.4 + flicker * 0.6})`;
+      ctx.fill();
+    }
+  }
+
+  ctx.beginPath();
+  ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+  ctx.fillStyle = '#05060a';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(108,204,255,0.55)';
+  ctx.lineWidth = Math.max(1, outerR * 0.02);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function drawRock(rock) {
   if (rock.type === 'station') {
     drawStation(rock);
+    return;
+  }
+  if (rock.type === 'tunnel') {
+    drawTunnel(rock);
     return;
   }
   const p = project(rock.x, rock.y, rock.z);
@@ -408,7 +542,7 @@ function drawRock(rock) {
 }
 
 function drawShip() {
-  const w = SHIP_WIDTH;
+  const w = shipWidth;
   const h = w * shipImageAspect;
   ctx.save();
   ctx.translate(centerX, centerY);
@@ -455,13 +589,21 @@ function endGame() {
   gameoverOverlay.classList.remove('hidden');
 }
 
-startBtn.addEventListener('click', startGame);
-retryBtn.addEventListener('click', startGame);
+async function beginGame() {
+  if (tiltController && !tiltController.isActive()) {
+    const granted = await tiltController.requestAccess();
+    if (granted) controller = tiltController;
+  }
+  startGame();
+}
+
+startBtn.addEventListener('click', beginGame);
+retryBtn.addEventListener('click', beginGame);
 
 window.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || running) return;
   if (!startOverlay.classList.contains('hidden') || !gameoverOverlay.classList.contains('hidden')) {
-    startGame();
+    beginGame();
   }
 });
 

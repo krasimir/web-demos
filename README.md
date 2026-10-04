@@ -37,6 +37,10 @@ Express app under `demos/`.
   PWA that reads the phone's orientation sensors and visualizes tilt
   left/right/up/down in real time; first step toward a Bluetooth game
   controller.
+* [Angle Finder PWA](./demos/angle-finder-pwa/) (port 3011) — a digital
+  angle finder / level built on the same orientation-sensor approach as the
+  tilt controller, repurposed as a practical tool: calibrate against any
+  surface as the zero reference, then read the live deviation in degrees.
 
 ## Running
 

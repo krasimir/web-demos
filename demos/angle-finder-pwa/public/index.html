@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Angle Finder</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#14181f">
+
+<!-- iOS "Add to Home Screen" support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Angle Finder">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #14181f;
+    --panel: #1b212b;
+    --line: rgba(255,255,255,0.08);
+    --line-strong: rgba(255,255,255,0.16);
+    --text-dim: #7c8798;
+    --text: #e7eaef;
+    --amber: #f5a623;
+    --amber-dim: rgba(245, 166, 35, 0.16);
+    --green: #3ddc84;
+    --green-dim: rgba(61, 220, 132, 0.16);
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+  }
+
+  #app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px);
+    box-sizing: border-box;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  #reading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #angle-value {
+    font-variant-numeric: tabular-nums;
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--amber);
+    transition: color 0.15s linear;
+    font-feature-settings: "tnum";
+  }
+  #angle-value.level { color: var(--green); }
+
+  #level-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    background: var(--green-dim);
+    border: 1px solid rgba(61, 220, 132, 0.4);
+    border-radius: 100px;
+    padding: 3px 12px;
+    visibility: hidden;
+  }
+  #level-badge.visible { visibility: visible; }
+
+  #level {
+    position: relative;
+    width: min(46vw, 46vh, 190px);
+    height: min(46vw, 46vh, 190px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 42%, #212937, #10141a 72%);
+    border: 1px solid var(--line-strong);
+    box-shadow: inset 0 0 24px rgba(0,0,0,0.55);
+    flex-shrink: 0;
+  }
+
+  #level::before,
+  #level::after {
+    content: '';
+    position: absolute;
+    background: var(--line);
+  }
+  #level::before { left: 0; right: 0; top: 50%; height: 1px; }
+  #level::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .ring-outer { width: 100%; height: 100%; }
+  .ring-mid { width: 64%; height: 64%; }
+
+  #dot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--amber);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 14px rgba(245, 166, 35, 0.75);
+    transition: background-color 0.15s linear, box-shadow 0.15s linear;
+  }
+  #dot.level {
+    background: var(--green);
+    box-shadow: 0 0 14px rgba(61, 220, 132, 0.8);
+  }
+
+  #axes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(72vw, 280px);
+  }
+
+  .axis-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .axis-label { color: var(--text-dim); }
+  .axis-value {
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  #status {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    min-height: 18px;
+  }
+
+  #calibrate-btn {
+    font-family: inherit;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 40px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    background: var(--amber);
+    color: #1a1304;
+  }
+  #calibrate-btn:active { background: #e0961e; }
+  #calibrate-btn[hidden] { display: none; }
+
+  /* Portrait stacks everything in one column sized off vw/vh; that column
+     is too tall once width and height swap in landscape, so switch to a
+     row and pull the heading/status out of flow (fixed) to keep the row
+     compact. */
+  @media (orientation: landscape) {
+    #app {
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 36px;
+    }
+    h1 {
+      position: fixed;
+      top: env(safe-area-inset-top, 10px);
+      left: env(safe-area-inset-left, 14px);
+    }
+    #level {
+      width: min(60vh, 30vw, 190px);
+      height: min(60vh, 30vw, 190px);
+    }
+    #axes {
+      width: min(30vw, 240px);
+    }
+    #status {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 70px);
+    }
+  }
+
+  #install-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    z-index: 6;
+    display: none;
+    justify-content: center;
+    padding: 0 10px;
+  }
+  #install-banner.visible { display: flex; }
+
+  #install-banner .inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 480px;
+    background: rgba(20, 24, 31, 0.92);
+    border: 1px solid var(--line-strong);
+    color: #eee;
+    font-family: sans-serif;
+    font-size: 12.5px;
+    line-height: 1.3;
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  #install-banner .install-icon { font-size: 20px; flex-shrink: 0; }
+  #install-banner .install-text { flex: 1; }
+  #install-banner .install-text b { color: #fff; }
+
+  #install-banner button {
+    border: none;
+    border-radius: 6px;
+    font-family: sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  #install-banner .install-action {
+    background: var(--amber);
+    color: #1a1304;
+    padding: 6px 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  #install-banner .install-dismiss {
+    background: transparent;
+    color: #999;
+    padding: 4px 6px;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  #build-id {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+    text-align: center;
+    color: rgba(255,255,255,0.22);
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    z-index: 1;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+  <div id="app">
+    <h1>Angle Finder</h1>
+
+    <div id="reading">
+      <div id="angle-value">0.0°</div>
+      <div id="level-badge">LEVEL</div>
+    </div>
+
+    <div id="level">
+      <div class="ring ring-outer"></div>
+      <div class="ring ring-mid"></div>
+      <div id="dot"></div>
+    </div>
+
+    <div id="axes">
+      <div class="axis-row">
+        <span class="axis-label">Up / Down</span>
+        <span id="ud-value" class="axis-value">0.0°</span>
+      </div>
+      <div class="axis-row">
+        <span class="axis-label">Left / Right</span>
+        <span id="lr-value" class="axis-value">0.0°</span>
+      </div>
+    </div>
+
+    <div id="status">Starting motion sensors…</div>
+
+    <button id="calibrate-btn" type="button" hidden>Calibrate flat</button>
+  </div>
+
+  <div id="install-banner">
+    <div class="inner">
+      <div class="install-icon">📲</div>
+      <div class="install-text" id="install-text"></div>
+      <button class="install-action" id="install-action" type="button" hidden>Install</button>
+      <button class="install-dismiss" id="install-dismiss" type="button" aria-label="Dismiss">✕</button>
+    </div>
+  </div>
+
+  <div id="build-id">__BUILD_ID__</div>
+
+  <script src="install-prompt.js"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

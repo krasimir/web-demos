@@ -1,0 +1,13 @@
+{
+  "name": "angle-finder-pwa-demo",
+  "version": "1.0.0",
+  "description": "PWA digital angle finder / level for builders - calibrate against any surface as the zero reference, then read the live tilt angle off the phone's orientation sensors",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
