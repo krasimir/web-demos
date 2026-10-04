@@ -31,6 +31,7 @@
   .overlay button { margin-top: 20px; background: #1a3a52; color: #6cf; border: 1px solid #6cf; border-radius: 6px; font-family: inherit; font-size: 16px; padding: 10px 24px; cursor: pointer; }
   .overlay button:hover { background: #244e6e; }
   .hidden { display: none !important; }
+  .version-tag { position: fixed; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); font-size: 11px; color: #567; margin: 0; }
 
   #install-banner { position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); z-index: 6; display: none; justify-content: center; padding: 0 10px; }
   #install-banner.visible { display: flex; }
@@ -57,6 +58,7 @@
     <p>Steer your ship through the asteroid field.</p>
     <p id="instructions">Arrow keys / WASD to move. Survive as long as you can.</p>
     <button id="start-btn">Launch</button>
+    <p class="version-tag">Build __BUILD_ID__</p>
   </div>
 
   <div id="gameover-overlay" class="overlay hidden">

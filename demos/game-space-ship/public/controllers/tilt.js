@@ -1,6 +1,6 @@
 // How far (in degrees) a tilt has to travel from the calibrated center
 // before the ship reads full deflection on that axis.
-const MAX_TILT_DEG = 26;
+const MAX_TILT_DEG = 15;
 
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
