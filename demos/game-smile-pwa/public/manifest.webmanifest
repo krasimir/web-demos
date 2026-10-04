@@ -1,6 +1,6 @@
 {
-  "name": "Smile Jump",
-  "short_name": "Smile Jump",
+  "name": "Smile Jump 1.0",
+  "short_name": "Smile Jump 1.0",
   "description": "Jump by smiling at the camera - bigger smile, bigger jump",
   "start_url": "./index.html",
   "scope": "./",

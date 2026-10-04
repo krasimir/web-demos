@@ -11,7 +11,7 @@
 <!-- iOS "Add to Home Screen" support -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Smile Jump">
+<meta name="apple-mobile-web-app-title" content="Smile Jump 1.0">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
 <style>
@@ -61,12 +61,25 @@
     padding: 6px 10px;
   }
 
+  .camera-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
   video {
     width: 64px;
     height: 48px;
     border-radius: 6px;
     transform: scaleX(-1);
     object-fit: cover;
+  }
+
+  #version-tag {
+    font-size: 10px;
+    color: #fff;
+    font-family: sans-serif;
   }
 
   .meter-col {
@@ -96,6 +109,57 @@
   }
   .tilt-bar-fill.active {
     background: #ff5252;
+  }
+
+  .camera-select {
+    max-width: 120px;
+    background: rgba(0,0,0,0.4);
+    color: #eee;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 6px;
+    font-size: 11px;
+    padding: 3px 4px;
+  }
+  .camera-select[hidden] { display: none; }
+
+  #home-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: rgba(10, 10, 14, 0.82);
+    color: #eee;
+    font-family: sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  #home-screen.visible { display: flex; }
+  #home-screen h1 {
+    margin: 0;
+    font-size: 42px;
+    letter-spacing: 0.5px;
+  }
+  #home-screen p {
+    margin: 0;
+    font-size: 18px;
+    color: #ccc;
+    max-width: 340px;
+    line-height: 1.5;
+  }
+  #start-button {
+    border: none;
+    border-radius: 14px;
+    background: #4caf50;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 18px 56px;
+    cursor: pointer;
   }
 
   #status {
@@ -173,14 +237,24 @@
   </div>
 
   <div class="hud">
-    <video id="camera" autoplay playsinline muted></video>
+    <div class="camera-col">
+      <video id="camera" autoplay playsinline muted></video>
+      <div id="version-tag">v__APP_VERSION__</div>
+    </div>
     <div class="meter-col">
       <div class="smile-bar"><div id="smile-bar-fill" class="smile-bar-fill"></div></div>
       <div class="smile-bar"><div id="tilt-bar-fill" class="tilt-bar-fill"></div></div>
     </div>
+    <select id="camera-select" class="camera-select" hidden></select>
   </div>
 
   <div id="status"></div>
+
+  <div id="home-screen">
+    <h1>Smile Jump</h1>
+    <p>Smile at the camera to jump. Tilt your head down to squat under branches.</p>
+    <button id="start-button" type="button">Start</button>
+  </div>
 
   <div id="install-banner">
     <div class="inner">

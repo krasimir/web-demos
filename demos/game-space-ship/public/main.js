@@ -158,8 +158,12 @@ const TUNNEL_CHANCE = 0.05;
 function spawnRock() {
   const angle = Math.random() * Math.PI * 2;
   const dist = 0.12 + Math.random() * 0.55;
-  const x = Math.cos(angle) * dist * worldRadiusX;
-  const y = Math.sin(angle) * dist * WORLD_RADIUS_Y;
+  // Centered on the ship's current position rather than the world origin,
+  // so obstacles keep targeting wherever the player actually is - including
+  // parked all the way against an edge - instead of leaving a permanently
+  // safe spot once the ship strays far from center.
+  const x = ship.x + Math.cos(angle) * dist * worldRadiusX;
+  const y = ship.y + Math.sin(angle) * dist * WORLD_RADIUS_Y;
 
   const roll = Math.random();
 

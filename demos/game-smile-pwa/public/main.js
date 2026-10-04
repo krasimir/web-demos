@@ -26,6 +26,9 @@ const ctx = canvas.getContext('2d');
 const smileBarFill = document.getElementById('smile-bar-fill');
 const tiltBarFill = document.getElementById('tilt-bar-fill');
 const statusEl = document.getElementById('status');
+const cameraSelect = document.getElementById('camera-select');
+const homeScreenEl = document.getElementById('home-screen');
+const startButton = document.getElementById('start-button');
 
 const GAME_ASPECT = canvas.width / canvas.height;
 
@@ -115,6 +118,26 @@ let jumpRequested = false;
 let jumpPower = 0;
 let squatting = false;
 
+let gameStarted = false;
+let homeScreenVisible = false;
+const READY_STATUS = 'Smile to jump • tilt your head down to squat • grab the bubbles: gold = points, blue = slow down, green = shield';
+
+function showReadyStatus() {
+  statusEl.textContent = READY_STATUS;
+  setTimeout(() => {
+    statusEl.textContent = '';
+  }, 4500);
+}
+
+function beginRun() {
+  homeScreenVisible = false;
+  homeScreenEl.classList.remove('visible');
+  gameStarted = true;
+  showReadyStatus();
+}
+
+startButton.addEventListener('click', beginRun);
+
 let bgFar = 0;
 let bgMid = 0;
 let bgNear = 0;
@@ -156,6 +179,14 @@ let noseBaselineY = null;
 // crossing the enter threshold starts a squat, dropping back under the
 // (lower) exit threshold ends it, which avoids flicker right at the edge.
 function updateTilt(landmarks) {
+  // While airborne, head tilt is ignored so the spider always lands
+  // standing up, regardless of whether it was squatting right before the
+  // jump or tilts its head during the jump itself.
+  if (jumping) {
+    squatting = false;
+    return 0;
+  }
+
   if (!landmarks) {
     squatting = false;
     return 0;
@@ -396,6 +427,8 @@ function spawnPickup() {
 }
 
 function update() {
+  if (!gameStarted) return;
+
   if (gameOver) {
     gameOverTimer += 1;
     if (jumpRequested && gameOverTimer > RESTART_DELAY) resetGame();
@@ -403,15 +436,11 @@ function update() {
     return;
   }
 
-  // Smiling while squatted just stands the spider back up - it does not
-  // also jump. A second smile (now that it's standing) jumps normally.
+  // Smiling while squatted undoes the squat and jumps in the same motion.
   if (jumpRequested && !jumping) {
-    if (squatting) {
-      squatting = false;
-    } else {
-      velocityY = -(MIN_JUMP + jumpPower * (MAX_JUMP - MIN_JUMP));
-      jumping = true;
-    }
+    squatting = false;
+    velocityY = -(MIN_JUMP + jumpPower * (MAX_JUMP - MIN_JUMP));
+    jumping = true;
   }
   jumpRequested = false;
 
@@ -2209,9 +2238,42 @@ function draw() {
   }
 }
 
-async function startCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
+let currentStream = null;
+
+async function startCamera(deviceId) {
+  if (currentStream) currentStream.getTracks().forEach((t) => t.stop());
+  const constraints = deviceId ? { video: { deviceId: { exact: deviceId } } } : { video: true };
+  currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+  video.srcObject = currentStream;
+}
+
+// Multiple-camera pickers only make sense on desktops with several webcams
+// plugged in; phones/tablets (coarse pointer) always have a fixed front/back
+// pair picked for you, so the picker stays hidden there.
+async function setupCameraPicker() {
+  if (matchMedia('(pointer: coarse)').matches) return;
+
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+  if (videoInputs.length < 2) return;
+
+  cameraSelect.innerHTML = '';
+  videoInputs.forEach((d, i) => {
+    const opt = document.createElement('option');
+    opt.value = d.deviceId;
+    opt.textContent = d.label || `Camera ${i + 1}`;
+    cameraSelect.appendChild(opt);
+  });
+
+  const activeId = currentStream?.getVideoTracks()[0]?.getSettings().deviceId;
+  if (activeId) cameraSelect.value = activeId;
+  cameraSelect.hidden = false;
+
+  cameraSelect.addEventListener('change', () => {
+    startCamera(cameraSelect.value).catch((err) => {
+      statusEl.textContent = `Camera error: ${err.message}`;
+    });
+  });
 }
 
 async function initFaceLandmarker() {
@@ -2230,12 +2292,12 @@ async function initFaceLandmarker() {
 (async () => {
   try {
     await startCamera();
+    setupCameraPicker().catch(() => {});
     statusEl.textContent = 'Loading smile detector...';
     const faceLandmarker = await initFaceLandmarker();
-    statusEl.textContent = 'Smile to jump • tilt your head down to squat • grab the bubbles: gold = points, blue = slow down, green = shield';
-    setTimeout(() => {
-      statusEl.textContent = '';
-    }, 4500);
+
+    homeScreenVisible = true;
+    homeScreenEl.classList.add('visible');
 
     const tick = () => {
       if (video.readyState >= 2) {
@@ -2246,8 +2308,10 @@ async function initFaceLandmarker() {
 
         const isSmilingNow = score > SMILE_THRESHOLD;
         if (isSmilingNow && !prevSmiling) {
-          jumpRequested = true;
-          jumpPower = score;
+          if (gameStarted) {
+            jumpRequested = true;
+            jumpPower = score;
+          }
         }
         prevSmiling = isSmilingNow;
 

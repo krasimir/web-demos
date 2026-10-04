@@ -1,11 +1,11 @@
 {
   "name": "game-smile-pwa-demo",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "PWA version of Smile Jump - full-viewport landscape runner controlled by smiling at the camera, installable on iPhone home screen",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "release": "gcloud builds submit --config cloudbuild.yaml"
+    "release": "npm version patch && gcloud builds submit --config cloudbuild.yaml"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.14",

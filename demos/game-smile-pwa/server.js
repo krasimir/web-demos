@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3008;
 // fresh version. This id drives cache-busting for both the HTML and the
 // service worker, so a new deploy is never masked by a stale cache.
 const BUILD_ID = process.env.K_REVISION || String(Date.now());
+const APP_VERSION = require('./package.json').version;
 
 const indexTemplate = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
 const swTemplate = fs.readFileSync(path.join(__dirname, 'public', 'sw.js'), 'utf8');
@@ -17,7 +18,8 @@ const swTemplate = fs.readFileSync(path.join(__dirname, 'public', 'sw.js'), 'utf
 const indexHtml = indexTemplate
   .replace('src="main.js"', `src="main.js?v=${BUILD_ID}"`)
   .replace('src="install-prompt.js"', `src="install-prompt.js?v=${BUILD_ID}"`)
-  .replace('href="manifest.webmanifest"', `href="manifest.webmanifest?v=${BUILD_ID}"`);
+  .replace('href="manifest.webmanifest"', `href="manifest.webmanifest?v=${BUILD_ID}"`)
+  .replace('__APP_VERSION__', APP_VERSION);
 
 const swJs = swTemplate.replaceAll('__BUILD_ID__', BUILD_ID);
 
