@@ -4,7 +4,8 @@
   "description": "Capture a still photo from a connected camera using getUserMedia, no frameworks",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.14",

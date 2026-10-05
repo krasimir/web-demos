@@ -4,7 +4,8 @@
   "description": "Checkout form that exposes WebMCP tools (navigator.modelContext) so an agent can fill it in and place the order",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
   },
   "dependencies": {
     "express": "^4.19.2"

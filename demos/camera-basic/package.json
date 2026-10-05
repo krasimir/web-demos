@@ -4,7 +4,8 @@
   "description": "Bare minimum getUserMedia camera feed",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
   },
   "dependencies": {
     "express": "^4.19.2"
