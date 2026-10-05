@@ -4,7 +4,8 @@
   "description": "Pure JS example of HTTP streaming with Express",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
   },
   "dependencies": {
     "express": "^4.19.2"

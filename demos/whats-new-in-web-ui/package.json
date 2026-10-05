@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "build:vendor": "esbuild vendor-entry.js --bundle --format=esm --outfile=public/vendor/codemirror.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
   },
   "dependencies": {
     "express": "^4.19.2"

@@ -1,0 +1,22 @@
+steps:
+  # Build the container image
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      ["builds", "submit", "--tag", "gcr.io/wisepot/http-streaming"]
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "deploy",
+        "http-streaming",
+        "--image",
+        "gcr.io/wisepot/http-streaming",
+        "--region",
+        "europe-west1",
+        "--platform",
+        "managed",
+        "--min-instances",
+        "0",
+        "--allow-unauthenticated"
+      ]

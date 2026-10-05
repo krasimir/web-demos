@@ -1,7 +1,7 @@
 const express = require('express');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.get('/', async (_req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
