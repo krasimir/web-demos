@@ -3,13 +3,13 @@ const gl = canvas.getContext('webgl2');
 const content = document.querySelector('.content');
 
 const RIPPLE_CONFIG = {
-  lifetimeSec: 2.6,
+  lifetimeSec: 4.5,
   waveFrequencyPx: 0.5,
   waveSpeed: 16.0,
   spatialDecayPx: 0.03,
   timeDecay: 1.7,
-  displacementPx: 9.6,
-  clampPx: 18.0,
+  displacementPx: 16.0,
+  clampPx: 30.0,
   minAmplitude: 0.35,
   maxAmplitude: 1.8,
   spawnSpeedThreshold: 0.8,

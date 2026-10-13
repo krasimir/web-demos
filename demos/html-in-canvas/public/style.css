@@ -12,6 +12,7 @@ body {
   color: #fff;
   height: 100dvh;
   overflow: clip;
+  font-size: 30px;
 }
 
 canvas {
@@ -37,7 +38,7 @@ canvas {
   flex-direction: column;
   gap: 1em;
   background-color: #0005;
-  max-width: 520px;
+  max-width: 50%;
   padding: 2em;
   border-radius: 0.5em;
   box-shadow:
