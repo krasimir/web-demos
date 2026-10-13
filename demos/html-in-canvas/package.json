@@ -1,0 +1,13 @@
+{
+  "name": "html-in-canvas-demo",
+  "version": "1.0.0",
+  "description": "A live, interactive HTML form drawn into a canvas with the drawElementImage API and swayed by the wind without losing interactivity",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

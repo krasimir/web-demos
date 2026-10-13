@@ -41,6 +41,13 @@ Express app under `demos/`.
   angle finder / level built on the same orientation-sensor approach as the
   tilt controller, repurposed as a practical tool: calibrate against any
   surface as the zero reference, then read the live deviation in degrees.
+* [HTML in canvas](./demos/html-in-canvas/) (port 3012) — an ordinary login
+  form that, on click, gets drawn live into a `<canvas>` via the
+  [`drawElementImage`](https://developer.chrome.com/blog/html-in-canvas-origin-trial)
+  API and swayed by a wind animation, while staying fully clickable and
+  typeable since the real element's hit-testing is kept in sync with the
+  canvas transform. Needs Chrome Canary 149+ with
+  `chrome://flags/#canvas-draw-element` enabled.
 
 ## Running
 
