@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Raleway:400,400i,700");
+@import url("https://fonts.googleapis.com/css?family=Inter:400,500,600,700");
 
 * {
   margin: 0;
@@ -7,7 +7,7 @@
 }
 
 body {
-  font-family: Raleway, sans-serif;
+  font-family: "Inter", sans-serif;
   background-color: #000;
   color: #fff;
   height: 100dvh;
@@ -27,46 +27,96 @@ canvas {
   gap: 0.5em;
   width: 100%; height: 100%;
   padding: 1em;
-  background-color: #333;
+  background:
+    radial-gradient(circle at 20% 15%, #4f46e544, transparent 45%),
+    radial-gradient(circle at 85% 80%, #ec489944, transparent 45%),
+    linear-gradient(160deg, #0b0c14, #15121f 60%, #0b0c14);
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 1em;
-  background-color: #0005;
-  max-width: 50%;
-  padding: 2em;
-  border-radius: 0.5em;
+  gap: 1.25em;
+  width: 100%;
+  max-width: 480px;
+  padding: 2.25em;
+  border-radius: 1.25em;
+  background: linear-gradient(160deg, #ffffff14, #ffffff05);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid #ffffff22;
+  box-shadow:
+    0 20px 60px -20px #000c,
+    0 0 0 1px #ffffff0a inset,
+    0 1px 0 #ffffff26 inset;
 }
 
 form {
   display: flex;
   flex-direction: column;
-  gap: 0.75em;
+  gap: 1.1em;
 }
 
 label {
   display: flex;
   flex-direction: column;
-  gap: 0.25em;
-  font-size: 0.5em;
+  gap: 0.8em;
+  font-size: 0.42em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff99;
 }
 
-input, button {
+input {
   font-family: inherit;
-  font-size: 1.4em;
-  padding: 0.5em;
-  border: none;
+  font-size: 1.2em;
+  font-weight: 500;
+  padding: 1em;
+  border: 1px solid #ffffff22;
+  border-radius: 0.6em;
+  background: #ffffff0d;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+input::placeholder {
+  color: #ffffff55;
+}
+
+input:focus {
+  border-color: #8b7bff;
+  background: #ffffff14;
+  box-shadow: 0 0 0 4px #8b7bff33;
 }
 
 input.invalid {
-  outline: 2px solid #f55;
+  border-color: #ff5d7a;
+  box-shadow: 0 0 0 4px #ff5d7a2b;
 }
 
 button {
+  font-family: inherit;
+  font-size: 0.55em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   align-self: flex-start;
-  font-size: 0.6em;
-  padding: 0.6em 1.2em;
+  margin-top: 0.4em;
+  padding: 0.85em 1.8em;
+  border: none;
+  border-radius: 0.6em;
+  color: #fff;
+  background: linear-gradient(135deg, #535355, #323035);
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -8px #7c5bffcc;
+}
+
+button:active {
+  transform: translateY(0);
 }
