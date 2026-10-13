@@ -1,0 +1,13 @@
+{
+  "name": "html-in-canvas-basics-demo",
+  "version": "1.0.0",
+  "description": "The bare minimum HTML in Canvas example: plain text drawn into a canvas via drawElementImage, tilted in 3D by a slider",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

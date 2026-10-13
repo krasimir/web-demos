@@ -1,0 +1,22 @@
+steps:
+  # Build the container image
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      ["builds", "submit", "--tag", "gcr.io/wisepot/html-in-canvas2"]
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "deploy",
+        "html-in-canvas2",
+        "--image",
+        "gcr.io/wisepot/html-in-canvas2",
+        "--region",
+        "europe-west1",
+        "--platform",
+        "managed",
+        "--min-instances",
+        "0",
+        "--allow-unauthenticated"
+      ]

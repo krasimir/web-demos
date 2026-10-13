@@ -1,0 +1,13 @@
+{
+  "name": "html-in-canvas2-demo",
+  "version": "1.0.0",
+  "description": "A live HTML form drawn into a canvas via drawElementImage, where an invalid field shatters into pieces on blur and reassembles",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "release": "gcloud builds submit --config cloudbuild.yaml"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

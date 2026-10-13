@@ -48,6 +48,16 @@ Express app under `demos/`.
   typeable since the real element's hit-testing is kept in sync with the
   canvas transform. Needs Chrome Canary 149+ with
   `chrome://flags/#canvas-draw-element` enabled.
+* [HTML in canvas — glitch validation](./demos/html-in-canvas2/) (port
+  3013) — a name/email/phone form rendered the same way, where blurring a
+  field with an invalid value makes it glitch like a corrupted render
+  (torn slices, RGB channel split, a green flicker) before recovering.
+  Needs the same Chrome Canary flag as above.
+* [HTML in canvas — the basics](./demos/html-in-canvas-basics/) (port
+  3014) — the bare-minimum example: plain text drawn into a canvas via
+  `drawElementImage` and tilted in 3D by a slider, meant for walking
+  through the core API step by step. Needs the same Chrome Canary flag as
+  above.
 
 ## Running
 
