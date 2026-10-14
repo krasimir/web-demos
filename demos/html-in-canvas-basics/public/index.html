@@ -6,15 +6,20 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <label class="tilt-control">
-    Tilt
-    <input type="range" id="tilt" min="-45" max="45" value="15">
-  </label>
+  <div class="controls">
+    <label class="tilt-control">
+      Rotate
+      <input type="range" id="tilt" min="0" max="360" value="270">
+    </label>
+    <label class="tilt-control">
+      Title
+      <input type="text" id="title-input" value="Hello, Canvas">
+    </label>
+  </div>
 
   <canvas layoutsubtree>
     <div class="content">
       <h1>Hello, Canvas</h1>
-      <p>This text is an ordinary DOM element, drawn live into a canvas via the HTML in Canvas API and tilted in 3D by a WebGL vertex shader.</p>
     </div>
   </canvas>
 

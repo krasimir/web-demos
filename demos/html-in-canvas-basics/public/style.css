@@ -37,11 +37,21 @@ canvas {
   opacity: 0.8;
 }
 
-.tilt-control {
+.content h1 {
+  font-size: 4em;
+}
+
+.controls {
   position: fixed;
   top: 1em;
   left: 1em;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.tilt-control {
   display: flex;
   align-items: center;
   gap: 0.5em;
