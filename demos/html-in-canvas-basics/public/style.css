@@ -29,6 +29,25 @@ canvas {
   padding: 2em;
   text-align: center;
   background-color: #333;
+  /* Vertical stripes double as rotation markers: since the texture wraps
+     around the ball's longitude, these visibly sweep past as you drag the
+     slider, making the spin read clearly even when the text itself doesn't
+     change much frame to frame. */
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.6) 0px,
+    rgba(255, 255, 255, 0.6) 2px,
+    transparent 2px,
+    transparent 60px
+  );
+}
+
+.content p,
+.content h1 {
+  /* The sphere shading goes from dark at the rim to near-white at the
+     center, so plain white text would wash out when it rotates into the
+     bright spot. A dark halo keeps it readable at any point on the ball. */
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.7);
 }
 
 .content p {
