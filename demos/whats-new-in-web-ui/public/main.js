@@ -219,6 +219,23 @@ function renderStage() {
     gap: 0.5em;
     margin-top: 1em;
   }
+  .svg-demo {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .svg-demo img {
+    display: block;
+    min-width: 100%;
+  }
+  .svg-demo a {
+    color: #999;
+    font-size: 0.8rem;
+  }
+  .svg-demo a:hover {
+    text-decoration: underline;
+  }
 </style>
 <style id="demo-css">${cssCode}</style>
 </head>

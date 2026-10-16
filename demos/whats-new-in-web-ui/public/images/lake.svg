@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" role="img" aria-label="Responsive Alpine Lake National Park poster">
+<title>Alpine Lake. Responsive SVG demonstration</title>
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#77cde9"/><stop offset="1" stop-color="#e4f9ff"/></linearGradient>
+ <linearGradient id="water" x2="0" y2="1"><stop stop-color="#37b6cf"/><stop offset="1" stop-color="#086e90"/></linearGradient>
+ <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#e8f3ef"/></linearGradient>
+ <clipPath id="sceneclip"><rect x="14" y="14" width="972" height="622" rx="22"/></clipPath>
+ <g id="pine"><path d="M0 -53 L-17 -22 H-9 L-24 3 H-13 L-30 30 H30 L13 3 H24 L9 -22 H17Z" fill="#164c45"/><path d="M0 -48 L-14 -22 H-7 L-19 2 H-9 L-25 26 H0Z" fill="#226b55"/><rect x="-4" y="27" width="8" height="13" fill="#664e37"/></g>
+ <g id="cloud" fill="#fff" opacity=".8"><ellipse cx="0" cy="0" rx="38" ry="12"/><ellipse cx="-15" cy="-7" rx="18" ry="14"/><ellipse cx="13" cy="-8" rx="22" ry="15"/></g>
+</defs>
+<style><![CDATA[
+  /* Media queries use the SVG viewport when loaded as an image. */
+  .compact-only { display:none; }
+  .desktop-only { display:inline; }
+  .headline { font: 900 68px system-ui, sans-serif; letter-spacing: 3px; fill:#103945; }
+  .subtitle { font: 700 19px system-ui, sans-serif; letter-spacing: 7px; fill:#225565; }
+  .stat-number { font: 800 26px system-ui, sans-serif; fill:#143f48; }
+  .stat-label { font: 700 12px system-ui, sans-serif; letter-spacing:1px; fill:#52747b; }
+  #sun { transition:fill .25s; }
+  @media (max-width: 700px) {
+    .desktop-only { display:none; }
+    .compact-only { display:inline; }
+    .headline { font-size: 82px; }
+    #sun { fill:#ffbf4a; }
+    #scene { transform: translateY(65px) scale(1.04); transform-origin: 500px 340px; }
+    #header { transform:translateY(75px); }
+  }
+  @media (max-width: 420px) {
+    .headline { font-size: 100px; }
+    #header { transform:translateY(110px); }
+    #scene { transform:translateY(115px) scale(1.25); transform-origin: 500px 350px; }
+    .medium-only { display:none; }
+  }
+]]></style>
+<g clip-path="url(#sceneclip)">
+ <rect width="1000" height="650" fill="url(#sky)"/>
+ <g id="scene">
+ <circle id="sun" cx="808" cy="150" r="58" fill="#ffdc75"/>
+
+<use href="#cloud" transform="translate(140 150) scale(1.1)" class="desktop-only"/>
+<use href="#cloud" transform="translate(380 185) scale(0.65)" class="desktop-only"/>
+<use href="#cloud" transform="translate(655 115) scale(0.8)" class="desktop-only"/>
+<use href="#cloud" transform="translate(920 210) scale(0.6)" class="desktop-only"/>
+<use href="#cloud" transform="translate(530 225) scale(0.55)" class="desktop-only"/>
+<path d="M0 410 L125 238 L195 319 L312 190 L448 383 L577 202 L702 371 L814 254 L1000 414Z" fill="#9cc7dc"/>
+<path d="M0 429 L126 269 L206 362 L312 209 L434 392 L575 222 L707 395 L819 281 L1000 430Z" fill="#5b94b2"/>
+<path d="M234 291 L312 209 L385 309 L352 291 L330 304 L308 271 L284 302 L269 288Z M500 311 L575 222 L654 327 L617 307 L591 321 L566 278 L542 311Z M68 338 L126 269 L177 338 L151 327 L129 303 L112 326Z M761 347 L819 281 L885 355 L844 332 L819 313 L799 337Z" fill="#f8ffff"/>
+<path d="M0 411 Q125 345 230 402 T460 402 Q625 346 755 398 T1000 385 L1000 550 H0Z" fill="#448b82"/>
+<path d="M0 448 Q140 398 300 452 T600 437 Q785 392 1000 450 L1000 558 H0Z" fill="#287368"/>
+<path d="M0 474 Q230 450 420 468 T1000 465 L1000 650 H0Z" fill="url(#water)"/>
+<path d="M0 486 Q230 474 420 486 T1000 481" fill="none" stroke="#b2f1f0" stroke-width="5" opacity=".65"/>
+
+<path class="desktop-only" d="M247 545 h75" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M212 588 h16" stroke="#9be5e6" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M268 601 h46" stroke="#9be5e6" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M672 501 h43" stroke="#56c5d3" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M414 561 h50" stroke="#9be5e6" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M106 560 h28" stroke="#9be5e6" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M288 564 h40" stroke="#56c5d3" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M758 512 h56" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M848 506 h38" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M125 582 h17" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M722 509 h45" stroke="#c1ffff" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M938 524 h51" stroke="#9be5e6" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M80 567 h74" stroke="#9be5e6" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M733 522 h23" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M761 572 h70" stroke="#56c5d3" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M585 543 h68" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M177 595 h52" stroke="#9be5e6" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M721 538 h58" stroke="#56c5d3" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M878 561 h46" stroke="#c1ffff" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M331 517 h36" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M537 582 h18" stroke="#c1ffff" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M573 526 h36" stroke="#9be5e6" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M317 541 h28" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M448 530 h38" stroke="#56c5d3" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M927 551 h25" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M134 519 h73" stroke="#c1ffff" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M221 596 h24" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M28 599 h62" stroke="#56c5d3" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M871 519 h50" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M157 550 h50" stroke="#56c5d3" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M442 508 h51" stroke="#9be5e6" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M749 510 h16" stroke="#9be5e6" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M124 595 h47" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M172 601 h73" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M740 517 h52" stroke="#9be5e6" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M32 614 h22" stroke="#56c5d3" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M689 571 h21" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M374 539 h75" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M676 604 h45" stroke="#9be5e6" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M911 577 h16" stroke="#c1ffff" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M197 541 h41" stroke="#56c5d3" stroke-width="1" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M100 523 h52" stroke="#9be5e6" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M845 558 h64" stroke="#9be5e6" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M139 511 h51" stroke="#c1ffff" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+<path class="desktop-only" d="M678 514 h60" stroke="#56c5d3" stroke-width="3" opacity=".48" stroke-linecap="round"/>
+<use href="#pine" class="desktop-only" transform="translate(165 460) scale(0.53)"/>
+<use href="#pine" class="desktop-only" transform="translate(718 458) scale(0.36)"/>
+<use href="#pine" class="desktop-only" transform="translate(384 406) scale(0.47)"/>
+<use href="#pine" class="desktop-only" transform="translate(201 427) scale(0.61)"/>
+<use href="#pine" class="desktop-only" transform="translate(26 446) scale(0.66)"/>
+<use href="#pine" class="desktop-only" transform="translate(171 464) scale(0.66)"/>
+<use href="#pine" class="desktop-only" transform="translate(390 464) scale(0.36)"/>
+<use href="#pine" class="desktop-only" transform="translate(766 466) scale(0.57)"/>
+<use href="#pine" class="desktop-only" transform="translate(-7 437) scale(0.56)"/>
+<use href="#pine" class="desktop-only" transform="translate(143 441) scale(0.71)"/>
+<use href="#pine" class="desktop-only" transform="translate(805 428) scale(0.57)"/>
+<use href="#pine" class="desktop-only" transform="translate(143 470) scale(0.46)"/>
+<use href="#pine" class="desktop-only" transform="translate(736 441) scale(0.51)"/>
+<use href="#pine" class="desktop-only" transform="translate(710 437) scale(0.58)"/>
+<use href="#pine" class="desktop-only" transform="translate(203 425) scale(0.49)"/>
+<use href="#pine" class="desktop-only" transform="translate(755 474) scale(0.67)"/>
+<use href="#pine" class="desktop-only" transform="translate(618 426) scale(0.40)"/>
+<use href="#pine" class="desktop-only" transform="translate(765 467) scale(0.72)"/>
+<use href="#pine" class="desktop-only" transform="translate(708 474) scale(0.43)"/>
+<use href="#pine" class="desktop-only" transform="translate(855 425) scale(0.49)"/>
+<use href="#pine" class="desktop-only" transform="translate(1018 410) scale(0.38)"/>
+<use href="#pine" class="desktop-only" transform="translate(120 463) scale(0.62)"/>
+<use href="#pine" class="desktop-only" transform="translate(534 453) scale(0.64)"/>
+<use href="#pine" class="desktop-only" transform="translate(541 437) scale(0.39)"/>
+<use href="#pine" class="desktop-only" transform="translate(1012 434) scale(0.39)"/>
+<use href="#pine" class="desktop-only" transform="translate(823 431) scale(0.43)"/>
+<use href="#pine" class="desktop-only" transform="translate(487 464) scale(0.62)"/>
+<use href="#pine" class="desktop-only" transform="translate(491 429) scale(0.66)"/>
+<use href="#pine" class="desktop-only" transform="translate(380 447) scale(0.50)"/>
+<use href="#pine" class="desktop-only" transform="translate(196 414) scale(0.44)"/>
+<use href="#pine" class="desktop-only" transform="translate(329 472) scale(0.75)"/>
+<use href="#pine" class="desktop-only" transform="translate(72 417) scale(0.26)"/>
+<use href="#pine" class="desktop-only" transform="translate(371 433) scale(0.29)"/>
+<use href="#pine" class="desktop-only" transform="translate(927 458) scale(0.68)"/>
+<use href="#pine" class="desktop-only" transform="translate(558 472) scale(0.30)"/>
+<use href="#pine" class="desktop-only" transform="translate(712 408) scale(0.41)"/>
+<use href="#pine" class="desktop-only" transform="translate(59 410) scale(0.68)"/>
+<use href="#pine" class="desktop-only" transform="translate(730 409) scale(0.66)"/>
+<use href="#pine" class="desktop-only" transform="translate(55 440) scale(0.36)"/>
+<use href="#pine" class="desktop-only" transform="translate(712 441) scale(0.28)"/>
+<use href="#pine" class="desktop-only" transform="translate(213 444) scale(0.47)"/>
+<use href="#pine" class="desktop-only" transform="translate(301 432) scale(0.70)"/>
+<use href="#pine" class="desktop-only" transform="translate(284 455) scale(0.61)"/>
+<use href="#pine" class="desktop-only" transform="translate(113 412) scale(0.52)"/>
+<use href="#pine" class="desktop-only" transform="translate(148 437) scale(0.71)"/>
+<use href="#pine" class="desktop-only" transform="translate(670 425) scale(0.30)"/>
+<use href="#pine" class="desktop-only" transform="translate(84 407) scale(0.53)"/>
+<use href="#pine" class="desktop-only" transform="translate(343 421) scale(0.53)"/>
+<use href="#pine" transform="translate(45 500) scale(1.7)"/>
+<use href="#pine" transform="translate(100 535) scale(1.35)"/>
+<use href="#pine" transform="translate(178 518) scale(1.2)"/>
+<use href="#pine" transform="translate(825 520) scale(1.25)"/>
+<use href="#pine" transform="translate(900 518) scale(1.65)"/>
+<use href="#pine" transform="translate(964 543) scale(1.6)"/>
+<g class="desktop-only">
+ <path d="M685 489 L764 437 L846 491 V561 H685Z" fill="#a75e31" stroke="#6a3d27" stroke-width="6"/>
+ <path d="M665 489 L765 408 L863 489 L837 489 L765 433 L692 489Z" fill="#394c55" stroke="#243c42" stroke-width="6"/>
+ <rect x="745" y="502" width="37" height="59" fill="#593c2c"/><rect x="797" y="505" width="28" height="29" fill="#ffd98a" stroke="#583a26" stroke-width="5"/>
+ <path d="M0 610 Q200 550 330 620 Q490 580 620 635 L1000 620 V650 H0Z" fill="#426e49"/>
+ <path d="M570 650 Q625 580 739 562 Q791 551 865 558" stroke="#e7c38a" stroke-width="22" fill="none"/>
+ </g>
+ </g>
+ <g id="header">
+  <text x="500" y="93" text-anchor="middle" class="headline">ALPINE LAKE</text>
+  <text x="500" y="126" text-anchor="middle" class="subtitle desktop-only">NATIONAL PARK • EXPLORE THE WILD</text>
+  <text x="500" y="155" text-anchor="middle" class="subtitle compact-only">NATIONAL PARK</text>
+ </g>
+ <g class="desktop-only">
+  <rect x="40" y="535" width="920" height="91" rx="16" fill="url(#panel)" stroke="#ffffff" stroke-width="3"/>
+  <path d="M270 550V612 M500 550V612 M730 550V612" stroke="#bed5d6" stroke-width="2"/>
+  <text x="78" y="564" class="stat-label">ELEVATION</text><text x="78" y="599" class="stat-number">2,438 m</text>
+  <text x="308" y="564" class="stat-label">FOREST COVER</text><text x="308" y="599" class="stat-number">1,200 ha</text>
+  <text x="538" y="564" class="stat-label">LAKE AREA</text><text x="538" y="599" class="stat-number">12 km²</text>
+  <text x="768" y="564" class="stat-label">HIKING TRAILS</text><text x="768" y="599" class="stat-number">8 routes</text>
+ </g>
+ <g class="compact-only"><rect x="320" y="510" width="360" height="65" rx="32" fill="#f9ffff" opacity=".95"/><text x="500" y="551" text-anchor="middle" style="font:800 28px system-ui,sans-serif;fill:#165466">EXPLORE NATURE</text></g>
+</g>
+<rect x="14" y="14" width="972" height="622" rx="22" fill="none" stroke="#17434c" stroke-width="9"/>
+</svg>

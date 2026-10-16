@@ -440,4 +440,36 @@ product.addEventListener('click', (e) => {
   }
 };
 
-export const demos = [centering, contrastColor, ifelse, dialog, viewTransitions];
+/* ******************************************** center */
+
+const animatedSVG = {
+  name: "VI. SVG animation",
+  fontSize: { html: "1em", css: "1em" },
+  problem: {
+    html: `<div class="svg-demo">
+  <img src="/images/product.svg" />
+  <a href="/images/product.svg" target="_blank">
+    product.svg
+  </a>
+</div>`,
+    css: ``,
+    js: ``
+  }
+};
+
+const responsiveSVG = {
+  name: "VII. Responsive SVG",
+  fontSize: { html: "0.6em", css: "1em" },
+  problem: {
+    html: `<div class="svg-demo">
+  <img src="/images/lake.svg" />
+  <a href="/images/lake.svg" target="_blank">
+    lake.svg
+  </a>
+</div>`,
+    css: ``,
+    js: ``
+  }
+};
+
+export const demos = [centering, contrastColor, ifelse, dialog, viewTransitions, animatedSVG, responsiveSVG];
