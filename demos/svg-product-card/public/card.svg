@@ -1,0 +1,127 @@
+<svg viewBox="0 0 520 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fluid: three gooey balls morphing into each other, next to a text block">
+  <title>Fluid — image and text, reflowing from a row to a column</title>
+
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop class="bg-stop-a" offset="0%"/>
+      <stop class="bg-stop-b" offset="100%"/>
+    </linearGradient>
+
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop class="accent-stop-a" offset="0%"/>
+      <stop class="accent-stop-b" offset="100%"/>
+    </linearGradient>
+
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+
+    <filter id="goo" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix"
+        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo"/>
+      <feBlend in="SourceGraphic" in2="goo"/>
+    </filter>
+  </defs>
+
+  <style>
+    :root {
+      --bg1: #140f2d;
+      --bg2: #0b0820;
+      --card-text: #f4f2ff;
+      --muted: #a9a3c9;
+      --accent1: #7c5cff;
+      --accent2: #27d7e8;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg1: #eef0ff;
+        --bg2: #e3e6ff;
+        --card-text: #19163a;
+        --muted: #635e85;
+      }
+    }
+
+    svg { background: transparent; }
+
+    .bg-stop-a { stop-color: var(--bg1); }
+    .bg-stop-b { stop-color: var(--bg2); }
+    .accent-stop-a { stop-color: var(--accent1); }
+    .accent-stop-b { stop-color: var(--accent2); }
+
+    text {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      fill: var(--card-text);
+      user-select: none;
+    }
+
+    .card-bg { fill: url(#bgGrad); filter: url(#softShadow); }
+
+    .heading { font-weight: 700; font-size: 26px; }
+    .body { font-size: 14px; fill: var(--muted); }
+
+    /* the one animation: three balls that morph into each other,
+       via an SVG blur+contrast "goo" filter on the group */
+    .goo-group { filter: url(#goo); }
+    .blob { fill: url(#accentGrad); transform-box: fill-box; transform-origin: center; }
+    .blob.a { animation: blob-a 3.6s ease-in-out infinite; }
+    .blob.b { animation: blob-b 3.6s ease-in-out infinite; }
+    .blob.c { animation: blob-c 3.6s ease-in-out infinite; }
+    @keyframes blob-a {
+      0%, 100% { transform: translateX(0); }
+      50%      { transform: translateX(90px); }
+    }
+    @keyframes blob-b {
+      0%, 100% { transform: translateX(0); }
+      50%      { transform: translateX(-90px); }
+    }
+    @keyframes blob-c {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(58px) scale(1.25); }
+    }
+
+    /* row vs. column: a plain translate(+scale) swap, driven by the
+       SVG's own rendered width, not the viewBox */
+    .media-shift, .copy-shift {
+      transform-box: fill-box;
+      transform-origin: center;
+      transition: transform 0.5s cubic-bezier(.22,1,.36,1);
+    }
+    @media (max-width: 500px) {
+      .media-shift { transform: translate(90px, -100px) scale(1.1); }
+      .copy-shift  { transform: translate(-240px, 118px); }
+    }
+  </style>
+
+  <rect class="card-bg" x="10" y="10" width="500" height="440" rx="28"/>
+
+  <clipPath id="cardClip">
+    <rect x="10" y="10" width="500" height="440" rx="28"/>
+  </clipPath>
+
+  <g clip-path="url(#cardClip)">
+    <!-- image -->
+    <g transform="translate(170,210)">
+      <g class="media-shift">
+        <g class="goo-group">
+          <circle class="blob a" cx="-58" cy="0" r="38"/>
+          <circle class="blob b" cx="58" cy="0" r="38"/>
+          <circle class="blob c" cx="0" cy="-68" r="24"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- text -->
+    <g transform="translate(300,180)">
+      <g class="copy-shift">
+        <text class="heading" x="0" y="0">Fluid by design</text>
+        <text class="body" x="0" y="34">
+          <tspan x="0" dy="0">Three circles, one SVG blur +</tspan>
+          <tspan x="0" dy="22">contrast filter, and they melt</tspan>
+          <tspan x="0" dy="22">into each other like liquid.</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

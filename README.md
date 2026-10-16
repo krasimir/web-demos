@@ -58,6 +58,13 @@ Express app under `demos/`.
   `drawElementImage` and tilted in 3D by a slider, meant for walking
   through the core API step by step. Needs the same Chrome Canary flag as
   above.
+* [SVG image + text](./demos/svg-product-card/) (port 3015) — a single
+  self-contained `.svg` file: three circles that melt into each other via
+  an SVG blur + contrast `<filter>`, next to a text block, where one
+  `@media (max-width: 500px)` query inside the SVG's own `<style>` block
+  swaps the whole layout from a row to a column — no JavaScript.
+  Drag-resize the embed on the page to see it reflow, or open `card.svg`
+  directly.
 
 ## Running
 
