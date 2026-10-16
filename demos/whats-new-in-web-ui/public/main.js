@@ -91,6 +91,7 @@ function createEditor(parent, langExtension, initialDoc, onChange, tab) {
   });
 }
 
+const appEl = document.querySelector('.app');
 const stage = document.getElementById('stage');
 const tabs = Array.from(document.querySelectorAll('.tab'));
 const editorHosts = Object.fromEntries(
@@ -221,6 +222,7 @@ function renderStage() {
   }
   .svg-demo {
     width: 100%;
+    max-width: 1040px;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -278,6 +280,10 @@ ${jsCode}
 </html>`;
 }
 
+function updateLayout(demo) {
+  appEl.classList.toggle('full-width', !!demo.fullWidth);
+}
+
 function setActiveTab(name) {
   tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.tab === name));
   Object.entries(editorHosts).forEach(([name_, el]) => {
@@ -293,6 +299,7 @@ tabs.forEach((tab) => {
 renderStage();
 setActiveTab(demos[currentDemoIndex].defaultTab || 'html');
 applyFontSizes(demos[currentDemoIndex]);
+updateLayout(demos[currentDemoIndex]);
 
 function setContent(tab, code) {
   const view = views[tab];
@@ -346,6 +353,7 @@ function selectDemo(index) {
   setActiveTab(demos[index].defaultTab || 'html');
   applyFontSizes(demos[index]);
   updateSolutionButton(demos[index]);
+  updateLayout(demos[index]);
   if (location.hash.slice(1) !== demoSlugs[index]) {
     location.hash = demoSlugs[index];
   }

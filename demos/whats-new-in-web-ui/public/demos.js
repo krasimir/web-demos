@@ -460,6 +460,7 @@ const animatedSVG = {
 const responsiveSVG = {
   name: "VII. Responsive SVG",
   fontSize: { html: "0.6em", css: "1em" },
+  fullWidth: false,
   problem: {
     html: `<div class="svg-demo">
   <img src="/images/lake.svg" />
