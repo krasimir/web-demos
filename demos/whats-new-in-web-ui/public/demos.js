@@ -232,7 +232,7 @@ dialog[open]::backdrop {
 const viewTransitions = {
   name: "V. View Transitions",
   defaultTab: "html",
-  fontSize: { html: "0.9em", css: "0.75em", js: "0.9em" },
+  fontSize: { html: "0.9em", css: "0.75em", js: "0.8em" },
   problem: {
     html: `<div class="product" id="product">
   <img
@@ -473,4 +473,24 @@ const responsiveSVG = {
   }
 };
 
-export const demos = [centering, contrastColor, ifelse, dialog, viewTransitions, animatedSVG, responsiveSVG];
+const mouseTracker = {
+  name: "VIII. SVG Mouse Tracker",
+  fontSize: { html: "0.6em", css: "1em" },
+  fullWidth: false,
+  problem: {
+    html: `<div class="svg-demo">
+  <object
+    data="/images/mouse.svg"
+    type="image/svg+xml"
+    width="100%"
+  ></object>
+  <a href="/images/mouse.svg" target="_blank">
+    mouse.svg
+  </a>
+</div>`,
+    css: ``,
+    js: ``
+  }
+};
+
+export const demos = [centering, contrastColor, ifelse, dialog, viewTransitions, animatedSVG, responsiveSVG, mouseTracker];

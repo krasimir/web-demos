@@ -160,7 +160,7 @@ function renderStage() {
   const cssCode = views.css.state.doc.toString();
   const jsCode = views.js.state.doc.toString();
   const isLight = document.documentElement.dataset.theme === 'light';
-  const stageBg = isLight ? '#ffffff' : '#0b0c0f';
+  const stageBg = isLight ? '#ffffff' : '#000';
   const stageFg = isLight ? '#14161a' : '#e8e8e8';
 
   stageReady = false;

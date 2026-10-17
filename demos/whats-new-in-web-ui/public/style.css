@@ -4,8 +4,8 @@
 
 :root {
   color-scheme: dark;
-  --bg: #0b0c0f;
-  --border: #484c54;
+  --bg: #000;
+  --border: #222325;
   --fg: #e8e8e8;
   --fg-muted: #6b7280;
   --fg-hover: #c9cdd3;

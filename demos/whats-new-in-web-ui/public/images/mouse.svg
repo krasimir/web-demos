@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="Interactive desk with laptop showing live mouse coordinates"  style="display:block;max-width:100%;">
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#f8e9d5"/><stop offset="1" stop-color="#ead0b3"/></linearGradient>
+ <linearGradient id="desk" x2="0" y2="1"><stop stop-color="#e8a969"/><stop offset="1" stop-color="#bc7644"/></linearGradient>
+ <linearGradient id="metal" x2="0" y2="1"><stop stop-color="#e2e5e9"/><stop offset="1" stop-color="#8b929c"/></linearGradient>
+ <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#365064" stroke-width=".8"/></pattern>
+ <clipPath id="screenClip"><rect x="335" y="205" width="530" height="320" rx="3"/></clipPath>
+ <filter id="shadow"><feGaussianBlur stdDeviation="10"/></filter>
+</defs>
+<style>
+ text{font-family:ui-monospace,SFMono-Regular,Consolas,monospace} .key{fill:#20252d;stroke:#69717a;stroke-width=".8"} #cursor{transition:opacity .15s}
+</style>
+<rect width="1200" height="750" fill="url(#wall)"/>
+<!-- window -->
+<rect x="0" y="0" width="245" height="355" fill="#b6e5f3"/><path d="M0 260Q55 170 120 250T245 230V355H0" fill="#94ba88"/><path d="M0 310Q90 230 180 300T245 290V355H0" fill="#668f66"/><path d="M245 0V355M0 355H245" stroke="#fef8e9" stroke-width="18"/>
+<!-- picture -->
+<rect x="790" y="30" width="210" height="160" fill="#9b6b4b"/><rect x="803" y="42" width="184" height="135" fill="#d6e0dc"/><circle cx="944" cy="77" r="22" fill="#e6ad52"/><path d="M803 160L860 89 904 132 936 106 987 158V177H803" fill="#487b8b"/><path d="M803 177L881 118 920 158 956 130 987 153V177" fill="#315c6b"/>
+<!-- lamp -->
+<path d="M1100 330L1065 195 1140 65" stroke="#333943" stroke-width="15" fill="none" stroke-linecap="round"/><path d="M1050 90Q1085 0 1180 60L1195 125Q1110 148 1050 90" fill="#30343c"/><ellipse cx="1123" cy="104" rx="53" ry="10" fill="#ffdb9a" opacity=".8"/>
+<!-- desk -->
+<rect y="385" width="1200" height="310" fill="url(#desk)"/><path d="M0 430H1200M0 580H1200M0 665H1200" stroke="#f9c188" opacity=".35" stroke-width="4"/><rect y="695" width="1200" height="55" fill="#985c38"/>
+<!-- books -->
+<rect x="65" y="353" width="230" height="35" rx="4" fill="#ba4e30"/><text x="110" y="377" fill="#fff1dc" font-size="18">SVG</text><rect x="76" y="317" width="205" height="35" rx="4" fill="#e8c698"/><text x="104" y="341" font-size="16" fill="#273b4d">JAVASCRIPT</text><rect x="59" y="281" width="218" height="35" rx="4" fill="#28465a"/><text x="78" y="305" font-size="15" fill="#fff">THE WEB PLATFORM</text>
+<!-- plant -->
+<path d="M85 295Q54 235 40 173M85 295Q106 210 144 153M85 295Q55 206 12 226M85 295Q122 252 177 238" stroke="#416c3e" stroke-width="6" fill="none"/><g fill="#4d7e42"><ellipse cx="37" cy="184" rx="24" ry="55" transform="rotate(-22 37 184)"/><ellipse cx="137" cy="166" rx="25" ry="61" transform="rotate(35 137 166)"/><ellipse cx="26" cy="230" rx="45" ry="22" transform="rotate(25 26 230)"/><ellipse cx="154" cy="239" rx="43" ry="22" transform="rotate(-20 154 239)"/></g><path d="M42 290H130L119 353H54Z" fill="#f4e4d4"/>
+<!-- notebook -->
+<path d="M25 612L235 584 270 661 58 695Z" fill="#263e52"/><path d="M40 616L220 592 253 657 67 684Z" fill="#f7e8ce"/><path d="M60 631L212 611M67 646L220 626M74 662L226 643" stroke="#c5b8a7" stroke-width="2"/><path d="M50 698L260 663" stroke="#23252a" stroke-width="9" stroke-linecap="round"/>
+<!-- laptop shadow -->
+<ellipse cx="602" cy="620" rx="350" ry="28" fill="#714c3c" opacity=".4" filter="url(#shadow)"/>
+<!-- laptop screen bezel -->
+<rect x="315" y="180" width="570" height="376" rx="17" fill="#1b2028" stroke="#b8bcc3" stroke-width="5"/><circle cx="600" cy="193" r="3" fill="#526070"/>
+<rect x="335" y="205" width="530" height="320" fill="#112230"/><rect x="335" y="205" width="530" height="320" fill="url(#grid)"/>
+<g clip-path="url(#screenClip)">
+ <rect x="354" y="225" width="240" height="105" rx="12" fill="#192a3a" stroke="#536c7e" stroke-width="2"/>
+ <text x="373" y="254" font-size="18" font-weight="bold" fill="#f0f5f8">MOUSE POSITION</text>
+ <text x="373" y="285" font-size="19" fill="#c6d9e6">X: <tspan id="xValue" fill="#55ddfa">move mouse</tspan></text>
+ <text x="373" y="314" font-size="19" fill="#c6d9e6">Y: <tspan id="yValue" fill="#55ddfa">over page</tspan></text>
+ <circle id="cursor" cx="660" cy="410" r="10" fill="#ff454b" stroke="#ff999b" stroke-width="3"/>
+ <text x="355" y="503" font-size="13" fill="#a6bdcb">SVG DOCUMENT · LIVE JAVASCRIPT</text>
+</g>
+<!-- laptop keyboard and base -->
+<path d="M316 552H884L972 618Q982 632 954 635H245Q218 633 229 618Z" fill="url(#metal)" stroke="#9fa4ae" stroke-width="3"/>
+<path d="M340 563H860L911 601H291Z" fill="#454b55"/>
+<g id="keys"/>
+<rect x="505" y="603" width="190" height="20" rx="6" fill="#aeb4be" stroke="#8e969f"/><path d="M540 629H661" stroke="#f1f3f6" stroke-width="4" stroke-linecap="round"/>
+<!-- mug -->
+<ellipse cx="1065" cy="599" rx="85" ry="18" fill="#a66c48"/><path d="M1005 468H1110V580Q1065 610 1005 580Z" fill="#f7eee3"/><path d="M1107 487Q1162 476 1154 523Q1148 555 1108 547" fill="none" stroke="#f7eee3" stroke-width="18"/><ellipse cx="1058" cy="470" rx="53" ry="11" fill="#ded0bd"/><text x="1022" y="518" font-size="18" font-weight="bold" fill="#24323c">GOOD</text><text x="1022" y="540" font-size="18" font-weight="bold" fill="#24323c">IDEAS</text><text x="1022" y="562" font-size="18" font-weight="bold" fill="#24323c">HERE</text>
+<!-- mouse -->
+<ellipse cx="1085" cy="648" rx="66" ry="27" fill="#2c333c"/><path d="M1085 622V646" stroke="#75818c" stroke-width="2"/>
+<script><![CDATA[
+(function () {
+  const svg = document.documentElement;
+  const xLabel = document.getElementById('xValue');
+  const yLabel = document.getElementById('yValue');
+  const dot = document.getElementById('cursor');
+  const keys = document.getElementById('keys');
+  const ns = 'http://www.w3.org/2000/svg';
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 16; col++) {
+      const key = document.createElementNS(ns, 'rect');
+      key.setAttribute('x', 340 + col * 32 + row * 3);
+      key.setAttribute('y', 567 + row * 8.3);
+      key.setAttribute('width', 27);
+      key.setAttribute('height', 6);
+      key.setAttribute('rx', 1.5);
+      key.setAttribute('class', 'key');
+      keys.appendChild(key);
+    }
+  }
+  function track(event) {
+    xLabel.textContent = Math.round(event.clientX) + ' px';
+    yLabel.textContent = Math.round(event.clientY) + ' px';
+    // Project pointer into the laptop display using SVG local coordinates.
+    const pt = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+    dot.setAttribute('cx', Math.max(345, Math.min(855, pt.x)));
+    dot.setAttribute('cy', Math.max(340, Math.min(490, pt.y)));
+  }
+  svg.addEventListener('pointermove', track);
+  // When same-origin and embedded as object/iframe, track the parent page too.
+  try {
+    if (window.parent !== window) window.parent.document.addEventListener('pointermove', track);
+  } catch (e) { /* cross-origin access blocked */ }
+})();
+]]></script>
+</svg>
